@@ -81,7 +81,6 @@
             this.console = new System.Windows.Forms.ToolStripMenuItem();
             this.miscToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buildBLKMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.buildCABMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
@@ -565,8 +564,7 @@
             // miscToolStripMenuItem
             // 
             this.miscToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.buildBLKMapToolStripMenuItem,
-            this.buildCABMapToolStripMenuItem});
+            this.buildBLKMapToolStripMenuItem});
             this.miscToolStripMenuItem.Name = "miscToolStripMenuItem";
             this.miscToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.miscToolStripMenuItem.Text = "Misc.";
@@ -577,13 +575,6 @@
             this.buildBLKMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.buildBLKMapToolStripMenuItem.Text = "Build BLKMap";
             this.buildBLKMapToolStripMenuItem.Click += new System.EventHandler(this.buildBLKMapToolStripMenuItem_Click);
-            // 
-            // buildCABMapToolStripMenuItem
-            // 
-            this.buildCABMapToolStripMenuItem.Name = "buildCABMapToolStripMenuItem";
-            this.buildCABMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.buildCABMapToolStripMenuItem.Text = "Build CABMap";
-            this.buildCABMapToolStripMenuItem.Click += new System.EventHandler(this.buildCABMapToolStripMenuItem_Click);
             // 
             // splitContainer1
             // 
@@ -1273,7 +1264,6 @@
         private System.Windows.Forms.ToolStripMenuItem miscToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem buildBLKMapToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem console;
-        private System.Windows.Forms.ToolStripMenuItem buildCABMapToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem16;
         private System.Windows.Forms.ToolStripComboBox specifyAIVersion;
     }
