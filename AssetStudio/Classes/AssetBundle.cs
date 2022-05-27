@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using System.Collections.Generic;
 
 namespace AssetStudio
 {
-    [JsonObject(MemberSerialization.OptIn)]
     public class AssetInfo
     {
-        [JsonProperty(PropertyName = "PreloadIndex")]
         public int preloadIndex;
-        [JsonProperty(PropertyName = "PreloadSize")]
         public int preloadSize;
-        [JsonProperty(PropertyName = "Asset")]
         public PPtr<Object> asset;
 
         public AssetInfo(ObjectReader reader)
@@ -23,35 +16,20 @@ namespace AssetStudio
         }
     }
 
-    [JsonObject(MemberSerialization.OptIn)]
     public sealed class AssetBundle : NamedObject
     {
-        [JsonProperty(PropertyName = "PreloadTable")]
         public PPtr<Object>[] m_PreloadTable;
-        [JsonProperty(PropertyName = "Container")]
         public KeyValuePair<string, AssetInfo>[] m_Container;
-        [JsonProperty(PropertyName = "MainAsset")]
         public AssetInfo m_MainAsset;
-        [JsonProperty(PropertyName = "RuntimeComaptability")]
         public uint m_RuntimeComaptability;
-        [JsonProperty(PropertyName = "AssetBundleName")]
         public string m_AssetBundleName;
-        [JsonProperty(PropertyName = "DependencyCount")]
         public int m_DependencyCount;
-        [JsonProperty(PropertyName = "Dependencies")]
         public string[] m_Dependencies;
-        [JsonProperty(PropertyName = "IsStreamedScenessetBundle")]
         public bool m_IsStreamedScenessetBundle;
-        [JsonProperty(PropertyName = "ExplicitDataLayout")]
         public int m_ExplicitDataLayout;
-        [JsonProperty(PropertyName = "PathFlags")]
         public int m_PathFlags;
-        [JsonProperty(PropertyName = "SceneHashCount")]
         public int m_SceneHashCount;
-        [JsonProperty(PropertyName = "SceneHashes")]
         public KeyValuePair<string, string>[] m_SceneHashes;
-
-        public static bool Exportable;
 
         public AssetBundle(ObjectReader reader) : base(reader)
         {

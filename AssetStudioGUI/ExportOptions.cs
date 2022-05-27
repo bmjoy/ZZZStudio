@@ -23,8 +23,6 @@ namespace AssetStudioGUI
                 }
             }
             openAfterExport.Checked = Properties.Settings.Default.openAfterExport;
-            exportAssetBundle.Checked = Properties.Settings.Default.exportAssetBundle;
-            exportIndexObject.Checked = Properties.Settings.Default.exportIndexObject;
             disableRndrr.Checked = Properties.Settings.Default.disableRndrr;
             key.Value = Properties.Settings.Default.key;
             enableXor.Checked = Properties.Settings.Default.enableXor;
@@ -40,7 +38,6 @@ namespace AssetStudioGUI
             scaleFactor.Value = Properties.Settings.Default.scaleFactor;
             fbxVersion.SelectedIndex = Properties.Settings.Default.fbxVersion;
             fbxFormat.SelectedIndex = Properties.Settings.Default.fbxFormat;
-
         }
 
         private void OKbutton_Click(object sender, EventArgs e)
@@ -58,10 +55,6 @@ namespace AssetStudioGUI
                 }
             }
             Properties.Settings.Default.openAfterExport = openAfterExport.Checked;
-            Properties.Settings.Default.exportAssetBundle = exportAssetBundle.Checked;
-            AssetBundle.Exportable = Properties.Settings.Default.exportAssetBundle;
-            Properties.Settings.Default.exportIndexObject = exportIndexObject.Checked;
-            IndexObject.Exportable = Properties.Settings.Default.exportAssetBundle;
             Properties.Settings.Default.disableRndrr = disableRndrr.Checked;
             Renderer.Parsable = !Properties.Settings.Default.disableRndrr;
             Properties.Settings.Default.key = (byte)key.Value;
