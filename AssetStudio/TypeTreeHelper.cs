@@ -84,8 +84,7 @@ namespace AssetStudio
                     append = false;
                     var str = reader.ReadAlignedString();
                     sb.AppendFormat("{0}{1} {2} = \"{3}\"\r\n", (new string('\t', level)), varTypeStr, varNameStr, str);
-                    var toSkip = GetNodes(m_Nodes, i);
-                    i += toSkip.Count - 1;
+                    i += 3;
                     break;
                 case "map":
                     {
@@ -234,8 +233,7 @@ namespace AssetStudio
                     break;
                 case "string":
                     value = reader.ReadAlignedString();
-                    var toSkip = GetNodes(m_Nodes, i);
-                    i += toSkip.Count - 1;
+                    i += 3;
                     break;
                 case "map":
                     {

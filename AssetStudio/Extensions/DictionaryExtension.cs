@@ -9,16 +9,20 @@ namespace AssetStudio
 {
     public static class DictionaryExtension
     {
-        public static KeyValuePair<string, long> Pick(this Dictionary<string, long> dict)
+        public static KeyValuePair<string, long> Pick(this Dictionary<string, long> dict, string path)
         {
-            if (!ResourceIndex.Loaded) 
-                return dict.FirstOrDefault();
+            var source = Convert.ToInt64(Path.GetFileNameWithoutExtension(path));
 
-            return dict.OrderBy(x =>
+            var distance = new List<long>(dict.Count);
+            foreach (var pair in dict)
             {
-                var index = ResourceIndex.BlockSortList.IndexOf(Convert.ToInt32(Path.GetFileNameWithoutExtension(x.Key)));
-                return index < 0 ? int.MaxValue : index;
-            }).FirstOrDefault();
+                var target = Convert.ToInt64(Path.GetFileNameWithoutExtension(pair.Key));
+                var diff = target - source;
+                distance.Add(Math.Abs(diff));
+            }
+
+            var idx = distance.Select((x, i) => (x, i)).Min().i;
+            return dict.ElementAt(idx);
         }
     }
 }

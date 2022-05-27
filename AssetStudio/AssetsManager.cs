@@ -332,7 +332,7 @@ namespace AssetStudio
                 blkFile = new BlkFile(reader);
                 foreach (var mhy0 in blkFile.Files)
                 {
-                    foreach (var file in mhy0.Value.FileList)
+                    foreach (var file in mhy0.fileList)
                     {
                         var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
                         var cabReader = new FileReader(dummyPath, file.stream);

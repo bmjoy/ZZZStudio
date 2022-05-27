@@ -253,28 +253,28 @@ namespace AssetStudio
                 switch (typeRef.FullName)
                 {
                     case "UnityEngine.AnimationCurve":
-                        Helper.AddAnimationCurve(nodes, name, indent);
+                        Helper.AddAnimationCurve(nodes, name, indent + 1);
                         break;
                     case "UnityEngine.Gradient":
-                        Helper.AddGradient(nodes, name, indent);
+                        Helper.AddGradient(nodes, name, indent + 1);
                         break;
                     case "UnityEngine.GUIStyle":
-                        Helper.AddGUIStyle(nodes, name, indent);
+                        Helper.AddGUIStyle(nodes, name, indent + 1);
                         break;
                     case "UnityEngine.RectOffset":
-                        Helper.AddRectOffset(nodes, name, indent);
+                        Helper.AddRectOffset(nodes, name, indent + 1);
                         break;
                     case "UnityEngine.Color32":
-                        Helper.AddColor32(nodes, name, indent);
+                        Helper.AddColor32(nodes, name, indent + 1);
                         break;
                     case "UnityEngine.Matrix4x4":
-                        Helper.AddMatrix4x4(nodes, name, indent);
+                        Helper.AddMatrix4x4(nodes, name, indent + 1);
                         break;
                     case "UnityEngine.Rendering.SphericalHarmonicsL2":
-                        Helper.AddSphericalHarmonicsL2(nodes, name, indent);
+                        Helper.AddSphericalHarmonicsL2(nodes, name, indent + 1);
                         break;
                     case "UnityEngine.PropertyName":
-                        Helper.AddPropertyName(nodes, name, indent);
+                        Helper.AddPropertyName(nodes, name, indent + 1);
                         break;
                 }
             }

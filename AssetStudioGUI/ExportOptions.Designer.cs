@@ -33,6 +33,8 @@
             this.Cancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.disableRndrr = new System.Windows.Forms.CheckBox();
+            this.exportIndexObject = new System.Windows.Forms.CheckBox();
+            this.exportAssetBundle = new System.Windows.Forms.CheckBox();
             this.openAfterExport = new System.Windows.Forms.CheckBox();
             this.restoreExtensionName = new System.Windows.Forms.CheckBox();
             this.assetGroupOptions = new System.Windows.Forms.ComboBox();
@@ -102,6 +104,8 @@
             // 
             this.groupBox1.AutoSize = true;
             this.groupBox1.Controls.Add(this.disableRndrr);
+            this.groupBox1.Controls.Add(this.exportIndexObject);
+            this.groupBox1.Controls.Add(this.exportAssetBundle);
             this.groupBox1.Controls.Add(this.openAfterExport);
             this.groupBox1.Controls.Add(this.restoreExtensionName);
             this.groupBox1.Controls.Add(this.assetGroupOptions);
@@ -119,12 +123,36 @@
             // disableRndrr
             // 
             this.disableRndrr.AutoSize = true;
-            this.disableRndrr.Location = new System.Drawing.Point(6, 196);
+            this.disableRndrr.Location = new System.Drawing.Point(97, 196);
             this.disableRndrr.Name = "disableRndrr";
             this.disableRndrr.Size = new System.Drawing.Size(113, 17);
             this.disableRndrr.TabIndex = 13;
             this.disableRndrr.Text = "Disable Renderers";
             this.disableRndrr.UseVisualStyleBackColor = true;
+            // 
+            // exportIndexObject
+            // 
+            this.exportIndexObject.AutoSize = true;
+            this.exportIndexObject.Checked = true;
+            this.exportIndexObject.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.exportIndexObject.Location = new System.Drawing.Point(6, 219);
+            this.exportIndexObject.Name = "exportIndexObject";
+            this.exportIndexObject.Size = new System.Drawing.Size(83, 17);
+            this.exportIndexObject.TabIndex = 12;
+            this.exportIndexObject.Text = "IndexObject";
+            this.exportIndexObject.UseVisualStyleBackColor = true;
+            // 
+            // exportAssetBundle
+            // 
+            this.exportAssetBundle.AutoSize = true;
+            this.exportAssetBundle.Checked = true;
+            this.exportAssetBundle.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.exportAssetBundle.Location = new System.Drawing.Point(6, 196);
+            this.exportAssetBundle.Name = "exportAssetBundle";
+            this.exportAssetBundle.Size = new System.Drawing.Size(85, 17);
+            this.exportAssetBundle.TabIndex = 11;
+            this.exportAssetBundle.Text = "AssetBundle";
+            this.exportAssetBundle.UseVisualStyleBackColor = true;
             // 
             // openAfterExport
             // 
@@ -600,6 +628,8 @@
         private System.Windows.Forms.CheckBox openAfterExport;
         private System.Windows.Forms.CheckBox exportAllUvsAsDiffuseMaps;
         private System.Windows.Forms.ToolTip exportUvsTooltip;
+        private System.Windows.Forms.CheckBox exportIndexObject;
+        private System.Windows.Forms.CheckBox exportAssetBundle;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.NumericUpDown key;
         private System.Windows.Forms.Label label7;

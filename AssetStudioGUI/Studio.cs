@@ -35,6 +35,7 @@ namespace AssetStudioGUI
     internal static class Studio
     {
         public static AssetsManager assetsManager = new AssetsManager();
+        public static AIVersionManager versionManager = new AIVersionManager();
         public static AssemblyLoader assemblyLoader = new AssemblyLoader();
         public static List<AssetItem> exportableAssets = new List<AssetItem>();
         public static List<AssetItem> visibleAssets = new List<AssetItem>();
@@ -118,7 +119,7 @@ namespace AssetStudioGUI
             using (reader)
                 blkFile = new BlkFile(reader);
 
-            var fileList = blkFile.Files.SelectMany(x => x.Value.FileList).ToList();
+            var fileList = blkFile.Files.SelectMany(x => x.fileList).ToList();
             if (fileList.Count > 0)
             {
                 var extractPath = Path.Combine(savePath, Path.GetFileNameWithoutExtension(reader.FileName));
@@ -248,9 +249,11 @@ namespace AssetStudioGUI
                                 }
                             }
                             assetItem.Text = m_AssetBundle.m_Name;
+                            exportable = AssetBundle.Exportable;
                             break;
                         case IndexObject m_IndexObject:
                             assetItem.Text = "IndexObject";
+                            exportable = IndexObject.Exportable;
                             break;
                         case ResourceManager m_ResourceManager:
                             foreach (var m_Container in m_ResourceManager.m_Container)

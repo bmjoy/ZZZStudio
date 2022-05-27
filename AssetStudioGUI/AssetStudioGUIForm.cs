@@ -127,6 +127,8 @@ namespace AssetStudioGUI
             displayAll.Checked = Properties.Settings.Default.displayAll;
             displayInfo.Checked = Properties.Settings.Default.displayInfo;
             enablePreview.Checked = Properties.Settings.Default.enablePreview;
+            AssetBundle.Exportable = Properties.Settings.Default.exportAssetBundle;
+            IndexObject.Exportable = Properties.Settings.Default.exportIndexObject;
             Renderer.Parsable = !Properties.Settings.Default.disableRndrr;
             MiHoYoBinData.doXOR = Properties.Settings.Default.enableXor;
             MiHoYoBinData.Key = Properties.Settings.Default.key;
@@ -148,8 +150,9 @@ namespace AssetStudioGUI
             }
             Progress.Default = new Progress<int>(SetProgressBarValue);
             Studio.StatusStripUpdate = StatusStripUpdate;
-            specifyAIVersion.Items.AddRange(AIVersionManager.GetVersions());
+            specifyAIVersion.Items.AddRange(versionManager.GetVersions());
             AsbManager.LoadBLKMap();
+            AsbManager.LoadCABMap();
         }
         ~AssetStudioGUIForm()
         {
@@ -797,6 +800,14 @@ namespace AssetStudioGUI
                     case AnimationClip _:
                         StatusStripUpdate("Can be exported with Animator or Objects");
                         break;
+                    case AssetBundle m_AssetBundle:
+                        PreviewAssetBundle(m_AssetBundle);
+                        StatusStripUpdate("Can be exported to JSON file.");
+                        break;
+                    case IndexObject m_IndexObject:
+                        PreviewIndexObject(m_IndexObject);
+                        StatusStripUpdate("Can be exported to JSON file.");
+                        break;
                     case MiHoYoBinData m_MiHoYoBinData:
                         PreviewMiHoYoBinData(m_MiHoYoBinData);
                         StatusStripUpdate("Can be exported/previewed as JSON if data is a valid JSON (check XOR).");
@@ -1023,6 +1034,17 @@ namespace AssetStudioGUI
                 obj = m_MonoBehaviour.ToType(type);
             }
             var str = JsonConvert.SerializeObject(obj, Formatting.Indented);
+            PreviewText(str);
+        }
+        
+        private void PreviewAssetBundle(AssetBundle m_AssetBundle)
+        {
+            var str = JsonConvert.SerializeObject(m_AssetBundle, Formatting.Indented);
+            PreviewText(str);
+        }
+        private void PreviewIndexObject(IndexObject m_IndexObject)
+        {
+            var str = JsonConvert.SerializeObject(m_IndexObject, Formatting.Indented);
             PreviewText(str);
         }
 
@@ -2134,6 +2156,19 @@ namespace AssetStudioGUI
             }
         }
 
+        private async void buildCABMapToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var openFolderDialog = new OpenFolderDialog();
+            openFolderDialog.Title = "Select GenshinImpact/YuanShen_Data Folder";
+            if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
+            {
+                Logger.Info("scanning for CAB files");
+                var files = Directory.GetFiles(openFolderDialog.Folder, "CAB-*", SearchOption.AllDirectories).ToList();
+                Logger.Info(string.Format("found {0} CAB files", files.Count()));
+                await Task.Run(() => AsbManager.BuildCABMap(openFolderDialog.Folder, files));
+            }
+        }
+
         private async void toolStripComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (specifyAIVersion.SelectedIndex == 0) return;
@@ -2142,7 +2177,7 @@ namespace AssetStudioGUI
 
             Logger.Info($"Loading AI v{version}");
             specifyAIVersion.Enabled = false;
-            var path = AIVersionManager.GetAIPath(version);
+            var path = versionManager.GetAIPath(version);
             if (string.IsNullOrEmpty(path))
             {
                 Logger.Warning("Invalid version, Aborting...");
@@ -2150,15 +2185,16 @@ namespace AssetStudioGUI
                 SpecifyAIVersionUpdate(true);
                 return;
             }
-            var needDownload = await AIVersionManager.NeedDownload(version);
-            if (needDownload)
+            if (versionManager.NeedDownload(version))
             {
                 Logger.Info($"AI v{version} not found !");
-                var json = await AIVersionManager.DownloadAI(version);
+                var json = await versionManager.DownloadAI(version);
                 
                 File.WriteAllText(path, json);
             }
-            await Task.Run(() => ResourceIndex.FromFile(path));
+            var loaded = await ResourceIndex.FromFile(path);
+            if (loaded)
+                Logger.Info("AssetIndex loaded successfully !!");
             SpecifyAIVersionUpdate(true);
         }
 
