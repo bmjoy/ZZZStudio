@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AssetStudio
 {
@@ -16,6 +15,10 @@ namespace AssetStudio
         public static Dictionary<ulong, ulong> AssetMap;
         public static List<Dictionary<uint, BundleInfo>> AssetLocationMap;
         public static List<int> BlockSortList;
+        public static List<int> PreloadBlocks;
+        public static List<int> PreloadShaderBlocks;
+        public static bool Loaded = false;
+
         static ResourceIndex()
         {
             BlockSortList = new List<int>();
@@ -28,35 +31,42 @@ namespace AssetStudio
             BundleDependencyMap = new Dictionary<int, List<int>>();
             BlockInfoMap = new Dictionary<int, Block>();
             BlockMap = new Dictionary<int, byte>();
+            PreloadBlocks = new List<int>();
+            PreloadShaderBlocks = new List<int>();
         }
-        public static async Task<bool> FromFile(string path)
+        public static void FromFile(string path)
         {
-            Logger.Info(string.Format("Loading AssetIndex JSON"));
+            Logger.Info(string.Format("Parsing...."));
             try
             {
                 Clear();
+                Loaded = false;
+
                 using (var stream = File.OpenRead(path))
                 {
                     var bytes = new byte[stream.Length];
-                    var count = await stream.ReadAsync(bytes, 0, (int)stream.Length);
+                    var count = stream.Read(bytes, 0, bytes.Length);
 
-                    if (count != stream.Length) throw new Exception("Error While Reading File");
+                    if (count != bytes.Length) 
+                        throw new Exception("Error While Reading AssetIndex");
+
                     var json = Encoding.UTF8.GetString(bytes);
 
                     var obj = JsonConvert.DeserializeObject<AssetIndex>(json);
                     if (obj != null)
                     {
-                        return MapToResourceIndex(obj);
+                        MapToResourceIndex(obj);
+                        Loaded = true;
                     }
                 }
             }
             catch (Exception e)
             {
-                Logger.Error("AssetIndex JSON was not loaded");
+                Logger.Error("AssetIndex was not loaded");
                 Console.WriteLine(e.ToString());
-                return false;
+                return;
             }
-            return false;
+            Logger.Info("Loaded !!");
         }
         public static void Clear()
         {
@@ -67,137 +77,84 @@ namespace AssetStudio
             AssetLocationMap.ForEach(x => x.Clear());
             BlockSortList.Clear();
         }
-        public static bool MapToResourceIndex(AssetIndex asset_index)
+        public static void MapToResourceIndex(AssetIndex assetIndex)
         {
-            try
+            BundleDependencyMap = assetIndex.Dependencies;
+            BlockSortList = assetIndex.SortList.ConvertAll(x => (int)x);
+            PreloadBlocks = assetIndex.PreloadBlocks.ConvertAll(x => (int)x);
+            PreloadShaderBlocks = assetIndex.PreloadShaderBlocks.ConvertAll(x => (int)x);
+            foreach (var asset in assetIndex.SubAssets)
             {
-                BundleDependencyMap = asset_index.Dependencies;
-                BlockSortList = asset_index.SortList.ConvertAll(x => (int)x);
-                foreach (var asset in asset_index.SubAssets)
+                foreach (var subAsset in asset.Value)
                 {
-                    foreach (var subAsset in asset.Value)
-                    {
-                        var bundleInfo = new BundleInfo(asset.Key, subAsset.Name);
-                        var blockInfo = asset_index.Assets[asset.Key];
-                        ulong key = (((ulong)blockInfo.Id) << 32) | subAsset.PathHashLast;
-                        AssetLocationMap[subAsset.PathHashPre].Add(subAsset.PathHashLast, bundleInfo);
-                        AssetMap[key] = ((ulong)subAsset.PathHashLast) << 8 | subAsset.PathHashPre;
-                    }
+                    var bundleInfo = new BundleInfo() { Bundle = asset.Key, Path = subAsset.Name };
+                    var blockInfo = assetIndex.Assets[asset.Key];
+                    ulong key = (((ulong)blockInfo.Id) << 32) | subAsset.PathHashLast;
+                    AssetLocationMap[subAsset.PathHashPre].Add(subAsset.PathHashLast, bundleInfo);
+                    AssetMap[key] = ((ulong)subAsset.PathHashLast) << 8 | subAsset.PathHashPre;
                 }
-                foreach (var asset in asset_index.Assets)
-                {
-                    var block = new Block((int)asset.Value.Id, (int)asset.Value.Offset);
-                    BlockInfoMap.Add(asset.Key, block);
+            }
+            foreach (var asset in assetIndex.Assets)
+            {
+                var block = new Block() { Id = (int)asset.Value.Id, Offset = (int)asset.Value.Offset };
+                BlockInfoMap.Add(asset.Key, block);
 
-                    if (!BlockMap.ContainsKey((int)asset.Value.Id))
-                        BlockMap.Add((int)asset.Value.Id, asset.Value.Language);
-                }
+                if (!BlockMap.ContainsKey((int)asset.Value.Id))
+                    BlockMap.Add((int)asset.Value.Id, asset.Value.Language);
             }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
         }
-        public static List<BundleInfo> GetAllAssets()
-        {
-            var hashes = new List<BundleInfo>();
-            for (int i = 0; i < AssetLocationMap.Capacity; i++)
-            {
-                foreach (var pair in AssetLocationMap[i])
-                {
-                    hashes.Add(pair.Value);
-                }
-            }
-            return hashes;
-        }
-        public static List<BundleInfo> GetAssets(int bundle)
-        {
-            var hashes = new List<BundleInfo>();
-            for (int i = 0; i < AssetLocationMap.Capacity; i++)
-            {
-                foreach (var pair in AssetLocationMap[i])
-                {
-                    if (pair.Value.Bundle == bundle)
-                        hashes.Add(pair.Value);
-                }
-            }
-            return hashes;
-        }
+        public static List<BundleInfo> GetAllAssets() => AssetLocationMap.SelectMany(x => x.Values).ToList();
+        public static List<BundleInfo> GetAssets(int bundle) => AssetLocationMap.SelectMany(x => x.Values).Where(x => x.Bundle == bundle).ToList();
+        public static ulong GetAssetIndex(ulong blkHash) => AssetMap.TryGetValue(blkHash, out var value) ? value : 0;
+        public static Block GetBlockInfo(int bundle) => BlockInfoMap.TryGetValue(bundle, out var blk) ? blk : null;
+        public static BlockFile GetBlockFile(int id) => BlockMap.TryGetValue(id, out var languageCode) ? new BlockFile() { LanguageCode = languageCode, Id = id } : null;
+        public static int GetBlockID(int bundle) => BlockInfoMap.TryGetValue(bundle, out var block) ? block.Id : 0;
+        public static List<int> GetBundleDep(int bundle) => BundleDependencyMap.TryGetValue(bundle, out var dep) ? dep : new List<int>();
         public static BundleInfo GetBundleInfo(ulong hash)
         {
-            var asset = new Asset(hash);
+            var asset = new Asset() { Hash = hash };
             if (AssetLocationMap.ElementAtOrDefault(asset.Pre) != null)
-            {
-                if (AssetLocationMap[asset.Pre].TryGetValue(asset.Last, out var bundleInfo)) return bundleInfo;
-            }
+                if (AssetLocationMap[asset.Pre].TryGetValue(asset.Last, out var bundleInfo)) 
+                    return bundleInfo;
             return null;
         }
         public static string GetBundlePath(uint last)
         {
             foreach (var location in AssetLocationMap)
-            {
-                if (location.TryGetValue(last, out var bundleInfo)) return bundleInfo.Path;
-            }
+                if (location.TryGetValue(last, out var bundleInfo)) 
+                    return bundleInfo.Path;
             return null;
-        }
-        public static ulong GetAssetIndex(ulong blkHash)
-        {
-            if (AssetMap.TryGetValue(blkHash, out var value)) return value;
-            else return 0;
         }
         public static List<uint> GetAllAssetIndices(int bundle)
         {
             var hashes = new List<uint>();
-            for (int i = 0; i < AssetLocationMap.Capacity; i++)
-            {
-                foreach (var pair in AssetLocationMap[i])
-                {
+            foreach (var location in AssetLocationMap)
+                foreach (var pair in location)
                     if (pair.Value.Bundle == bundle)
                         hashes.Add(pair.Key);
-                }
-            }
             return hashes;
         }
         public static List<int> GetBundles(int id)
         {
             var bundles = new List<int>();
             foreach (var block in BlockInfoMap)
-            {
                 if (block.Value.Id == id)
-                {
                     bundles.Add(block.Key);
-                }
-            }
             return bundles;
         }
-        public static Block GetBlockInfo(int bundle)
+        public static void GetDepBundles(ref List<int> bundles)
         {
-            if (BlockInfoMap.TryGetValue(bundle, out var blk)) return blk;
-            else return null;
-        }
-        public static BlockFile GetBlockFile(int id)
-        {
-            if (BlockMap.TryGetValue(id, out var languageCode))
+            for (int i = 0; i < bundles.Count; i++)
             {
-                return new BlockFile(languageCode, id);
+                var bundle = bundles[i];
+                bundles.AddRange(GetBundleDep(bundle));
             }
-            return null;
+            bundles = bundles.Distinct().ToList();
         }
-        public static int GetBlockID(int bundle)
-        {
-            if (BlockInfoMap.TryGetValue(bundle, out var block))
-            {
-                return block.Id;
-            }
-            else return 0;
-        }
-        public static List<int> GetBundleDep(int bundle) => BundleDependencyMap.TryGetValue(bundle, out var dep) ? dep : new List<int>();
         public static bool CheckIsLegitAssetPath(ulong hash)
         {
-            var asset = new Asset(hash);
-            return AssetLocationMap[asset.Pre].ContainsKey(asset.Last);
+            var asset = new Asset() { Hash = hash };
+            return AssetLocationMap.ElementAtOrDefault(asset.Pre).ContainsKey(asset.Last);
         }
 
         //public void AddAssetLocation(BundleInfo bundle, Asset asset)
@@ -210,42 +167,22 @@ namespace AssetStudio
     {
         public int Bundle;
         public string Path;
-        public BundleInfo(int bundle, string path)
-        {
-            Bundle = bundle;
-            Path = path;
-        }
     }
     public class Asset
     {
         public ulong Hash;
         public uint Last => (uint)(Hash >> 8);
         public byte Pre => (byte)(Hash & 0xFF);
-        public Asset(ulong hash)
-        {
-            Hash = hash;
-        }
     }
     public class Block
     {
         public int Id;
         public int Offset;
-
-        public Block(int id, int offset)
-        {
-            Id = id;
-            Offset = offset;
-        }
     }
     public class BlockFile
     {
         public int LanguageCode;
         public int Id;
-        public BlockFile(int languageCode, int id)
-        {
-            LanguageCode = languageCode;
-            Id = id;
-        }
     }
 
     public class AssetIndex
