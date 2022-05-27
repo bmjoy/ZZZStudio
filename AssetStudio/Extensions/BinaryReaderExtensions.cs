@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Linq;
 
 namespace AssetStudio
 {
@@ -80,6 +81,32 @@ namespace AssetStudio
         public static Matrix4x4 ReadMatrix(this BinaryReader reader)
         {
             return new Matrix4x4(reader.ReadSingleArray(16));
+        }
+
+        public static int ReadMhy0Int1(this BinaryReader reader)
+        {
+            var buffer = reader.ReadBytes(7);
+            return buffer[1] | (buffer[6] << 8) | (buffer[3] << 0x10) | (buffer[2] << 0x18);
+        }
+
+        public static int ReadMhy0Int2(this BinaryReader reader)
+        {
+            var buffer = reader.ReadBytes(6);
+            return buffer[2] | (buffer[4] << 8) | (buffer[0] << 0x10) | (buffer[5] << 0x18);
+        }
+
+        public static string ReadMhy0String(this BinaryReader reader)
+        {
+            var bytes = reader.ReadBytes(0x100);
+            return Encoding.UTF8.GetString(bytes.TakeWhile(b => !b.Equals(0)).ToArray());
+        }
+
+        public static bool ReadMhy0Bool(this BinaryReader reader)
+        {
+            var value = reader.ReadMhy0Int2();
+            var bytes = BitConverter.GetBytes(value);
+            Array.Reverse(bytes);
+            return BitConverter.ToBoolean(bytes, 0);
         }
 
         private static T[] ReadArray<T>(Func<T> del, int length)
