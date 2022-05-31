@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using static AssetStudio.ImportHelper;
 
 namespace AssetStudio
@@ -34,7 +33,6 @@ namespace AssetStudio
         {
             MergeSplitAssets(path, true);
             var files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).ToArray();
-            AsbManager.ProcessDependancies(ref files);
             var filesList = files.ToList();
             var toReadFile = ProcessingSplitFiles(filesList);
             Load(toReadFile);
@@ -328,7 +326,7 @@ namespace AssetStudio
             try
             {
                 BlkFile blkFile;
-                reader.MHY0Pos = AsbManager.offsets[reader.FullPath].ToArray();
+                reader.MHY0Pos = AsbManager.offsets.TryGetValue(reader.FullPath, out var list) ? list.ToArray() : Array.Empty<long>();
                 blkFile = new BlkFile(reader);
                 foreach (var mhy0 in blkFile.Files)
                 {
