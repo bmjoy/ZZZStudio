@@ -8,7 +8,6 @@ ________________________________________________________________________________
 
 Some features are:
 ```
-- BLK/CAB methods support.
 - Integration with `Radioegor146` repo to load asset_index through `Options -> Specify AI version`.
 - Exportable Assets (not all of them) with XOR/JSON support for `MiHoYoBinData`
 - Togglable debug console.
@@ -17,13 +16,6 @@ Some features are:
 _____________________________________________________________________________________________________________________________
 How to use:
 
-CAB Method:
-```
-1. Extract blks to a specific location (File -> Extract folder).
-2. Build CAB Map (Misc. -> Build CABMap).
-3. Load CAB files.
-```
-BLK Method:
 ```
 1. Build BLK Map (Misc. -> Build BLKMap).
 2. Load BLK files.
