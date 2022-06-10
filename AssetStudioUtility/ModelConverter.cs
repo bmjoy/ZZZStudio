@@ -881,58 +881,57 @@ namespace AssetStudio
                     var streamedFrames = m_Clip.m_StreamedClip.ReadData();
                     var m_ClipBindingConstant = animationClip.m_ClipBindingConstant ?? m_Clip.ConvertValueArrayToGenericBinding();
                     var m_ACLClip = m_Clip.m_ACLClip;
+                    var aclCount = m_ACLClip.m_CurveCount;
                     if (m_ACLClip.m_CurveCount != 0)
                     {
                         m_ACLClip.Process(out var values, out var times);
-                        var bindingList = m_ClipBindingConstant.genericBindings.Where(x => x.typeID == ClassIDType.Transform).ToArray();
                         for (int frameIndex = 0; frameIndex < times.Length; frameIndex++)
                         {
-                            var index = 0;
                             var time = times[frameIndex];
-                            var offset = frameIndex * (int)m_ACLClip.m_CurveCount;
-                            for (int curveIndex = offset; curveIndex < offset + m_ACLClip.m_CurveCount;)
+                            var frameOffset = frameIndex * m_ACLClip.m_CurveCount;
+                            for (int curveIndex = 0; curveIndex < m_ACLClip.m_CurveCount;)
                             {
-                                ReadCurveData(iAnim, bindingList[index++], time, values, 0, ref curveIndex);
+                                var index = curveIndex;
+                                ReadCurveData(iAnim, m_ClipBindingConstant, index, time, values, (int)frameOffset, ref curveIndex);
                             }
+                                
                         }
                     }
-                    else
+                    for (int frameIndex = 1; frameIndex < streamedFrames.Count - 1; frameIndex++)
                     {
-                        for (int frameIndex = 1; frameIndex < streamedFrames.Count - 1; frameIndex++)
+                        var frame = streamedFrames[frameIndex];
+                        var streamedValues = frame.keyList.Select(x => x.value).ToArray();
+                        for (int curveIndex = 0; curveIndex < frame.keyList.Length;)
                         {
-                            var frame = streamedFrames[frameIndex];
-                            var streamedValues = frame.keyList.Select(x => x.value).ToArray();
-                            for (int curveIndex = 0; curveIndex < frame.keyList.Length;)
-                            {
-                                ReadCurveData(iAnim, m_ClipBindingConstant, frame.keyList[curveIndex].index, frame.time, streamedValues, 0, ref curveIndex);
-                            }
+                            var index = aclCount + frame.keyList[curveIndex].index;
+                            ReadCurveData(iAnim, m_ClipBindingConstant, (int)index, frame.time, streamedValues, 0, ref curveIndex);
                         }
-                        var m_DenseClip = m_Clip.m_DenseClip;
-                        var streamCount = m_Clip.m_StreamedClip.curveCount;
-                        for (int frameIndex = 0; frameIndex < m_DenseClip.m_FrameCount; frameIndex++)
+                    }
+                    var m_DenseClip = m_Clip.m_DenseClip;
+                    var streamCount = m_Clip.m_StreamedClip.curveCount;
+                    for (int frameIndex = 0; frameIndex < m_DenseClip.m_FrameCount; frameIndex++)
+                    {
+                        var time = m_DenseClip.m_BeginTime + frameIndex / m_DenseClip.m_SampleRate;
+                        var frameOffset = frameIndex * m_DenseClip.m_CurveCount;
+                        for (int curveIndex = 0; curveIndex < m_DenseClip.m_CurveCount;)
                         {
-                            var time = m_DenseClip.m_BeginTime + frameIndex / m_DenseClip.m_SampleRate;
-                            var frameOffset = frameIndex * m_DenseClip.m_CurveCount;
-                            for (int curveIndex = 0; curveIndex < m_DenseClip.m_CurveCount;)
-                            {
-                                var index = streamCount + curveIndex;
-                                ReadCurveData(iAnim, m_ClipBindingConstant, (int)index, time, m_DenseClip.m_SampleArray, (int)frameOffset, ref curveIndex);
-                            }
+                            var index = aclCount + streamCount + curveIndex;
+                            ReadCurveData(iAnim, m_ClipBindingConstant, (int)index, time, m_DenseClip.m_SampleArray, (int)frameOffset, ref curveIndex);
                         }
-                        if (m_Clip.m_ConstantClip != null)
+                    }
+                    if (m_Clip.m_ConstantClip != null)
+                    {
+                        var m_ConstantClip = m_Clip.m_ConstantClip;
+                        var denseCount = m_Clip.m_DenseClip.m_CurveCount;
+                        var time2 = 0.0f;
+                        for (int i = 0; i < 2; i++)
                         {
-                            var m_ConstantClip = m_Clip.m_ConstantClip;
-                            var denseCount = m_Clip.m_DenseClip.m_CurveCount;
-                            var time2 = 0.0f;
-                            for (int i = 0; i < 2; i++)
+                            for (int curveIndex = 0; curveIndex < m_ConstantClip.data.Length;)
                             {
-                                for (int curveIndex = 0; curveIndex < m_ConstantClip.data.Length;)
-                                {
-                                    var index = streamCount + denseCount + curveIndex;
-                                    ReadCurveData(iAnim, m_ClipBindingConstant, (int)index, time2, m_ConstantClip.data, 0, ref curveIndex);
-                                }
-                                time2 = animationClip.m_MuscleClip.m_StopTime;
+                                var index = aclCount + streamCount + denseCount + curveIndex;
+                                ReadCurveData(iAnim, m_ClipBindingConstant, (int)index, time2, m_ConstantClip.data, 0, ref curveIndex);
                             }
+                            time2 = animationClip.m_MuscleClip.m_StopTime;
                         }
                     }
                 }
@@ -942,11 +941,6 @@ namespace AssetStudio
         private void ReadCurveData(ImportedKeyframedAnimation iAnim, AnimationClipBindingConstant m_ClipBindingConstant, int index, float time, float[] data, int offset, ref int curveIndex)
         {
             var binding = m_ClipBindingConstant.FindBinding(index);
-            ReadCurveData(iAnim, binding, time, data, offset, ref curveIndex);
-        }
-
-        private void ReadCurveData(ImportedKeyframedAnimation iAnim, GenericBinding binding, float time, float[] data, int offset, ref int curveIndex)
-        {
             if (binding.typeID == ClassIDType.SkinnedMeshRenderer) //BlendShape
             {
                 var channelName = GetChannelNameFromHash(binding.attribute);
