@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace AssetStudio
 {
@@ -16,56 +17,71 @@ namespace AssetStudio
         }
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
     public sealed class AssetBundle : NamedObject
     {
-        public PPtr<Object>[] m_PreloadTable;
-        public KeyValuePair<string, AssetInfo>[] m_Container;
-        public AssetInfo m_MainAsset;
-        public uint m_RuntimeComaptability;
-        public string m_AssetBundleName;
-        public int m_DependencyCount;
-        public string[] m_Dependencies;
-        public bool m_IsStreamedScenessetBundle;
-        public int m_ExplicitDataLayout;
-        public int m_PathFlags;
-        public int m_SceneHashCount;
-        public KeyValuePair<string, string>[] m_SceneHashes;
+        public static bool Exportable;
+
+        [JsonProperty]
+        public PPtr<Object>[] PreloadTable;
+        [JsonProperty]
+        public KeyValuePair<string, AssetInfo>[] Container;
+        [JsonProperty]
+        public AssetInfo MainAsset;
+        [JsonProperty]
+        public uint RuntimeComaptability;
+        [JsonProperty]
+        public string AssetBundleName;
+        [JsonProperty]
+        public int DependencyCount;
+        [JsonProperty]
+        public string[] Dependencies;
+        [JsonProperty]
+        public bool IsStreamedScenessetBundle;
+        [JsonProperty]
+        public int ExplicitDataLayout;
+        [JsonProperty]
+        public int PathFlags;
+        [JsonProperty]
+        public int SceneHashCount;
+        [JsonProperty]
+        public KeyValuePair<string, string>[] SceneHashes;
 
         public AssetBundle(ObjectReader reader) : base(reader)
         {
             var m_PreloadTableSize = reader.ReadInt32();
-            m_PreloadTable = new PPtr<Object>[m_PreloadTableSize];
+            PreloadTable = new PPtr<Object>[m_PreloadTableSize];
             for (int i = 0; i < m_PreloadTableSize; i++)
             {
-                m_PreloadTable[i] = new PPtr<Object>(reader);
+                PreloadTable[i] = new PPtr<Object>(reader);
             }
 
             var m_ContainerSize = reader.ReadInt32();
-            m_Container = new KeyValuePair<string, AssetInfo>[m_ContainerSize];
+            Container = new KeyValuePair<string, AssetInfo>[m_ContainerSize];
             for (int i = 0; i < m_ContainerSize; i++)
             {
-                m_Container[i] = new KeyValuePair<string, AssetInfo>(reader.ReadAlignedString(), new AssetInfo(reader));
+                Container[i] = new KeyValuePair<string, AssetInfo>(reader.ReadAlignedString(), new AssetInfo(reader));
             }
 
-            m_MainAsset = new AssetInfo(reader);
-            m_RuntimeComaptability = reader.ReadUInt32();
-            m_AssetBundleName = reader.ReadAlignedString();
-            m_DependencyCount = reader.ReadInt32();
-            m_Dependencies = new string[m_DependencyCount];
-            for (int k = 0; k < m_DependencyCount; k++)
+            MainAsset = new AssetInfo(reader);
+            RuntimeComaptability = reader.ReadUInt32();
+            AssetBundleName = reader.ReadAlignedString();
+            DependencyCount = reader.ReadInt32();
+            Dependencies = new string[DependencyCount];
+            for (int k = 0; k < DependencyCount; k++)
             {
-                m_Dependencies[k] = reader.ReadAlignedString();
+                Dependencies[k] = reader.ReadAlignedString();
             }
             reader.AlignStream();
-            m_IsStreamedScenessetBundle = reader.ReadBoolean();
+            IsStreamedScenessetBundle = reader.ReadBoolean();
             reader.AlignStream();
-            m_ExplicitDataLayout = reader.ReadInt32();
-            m_PathFlags = reader.ReadInt32();
-            m_SceneHashCount = reader.ReadInt32();
-            m_SceneHashes = new KeyValuePair<string, string>[m_SceneHashCount];
-            for (int l = 0; l < m_SceneHashCount; l++)
+            ExplicitDataLayout = reader.ReadInt32();
+            PathFlags = reader.ReadInt32();
+            SceneHashCount = reader.ReadInt32();
+            SceneHashes = new KeyValuePair<string, string>[SceneHashCount];
+            for (int l = 0; l < SceneHashCount; l++)
             {
-                m_SceneHashes[l] = new KeyValuePair<string, string>(reader.ReadAlignedString(), reader.ReadAlignedString());
+                SceneHashes[l] = new KeyValuePair<string, string>(reader.ReadAlignedString(), reader.ReadAlignedString());
             }
         }
     }

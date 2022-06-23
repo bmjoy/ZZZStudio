@@ -15,9 +15,6 @@ namespace AssetStudio
         public static Dictionary<ulong, ulong> AssetMap;
         public static List<Dictionary<uint, BundleInfo>> AssetLocationMap;
         public static List<int> BlockSortList;
-        public static List<int> PreloadBlocks;
-        public static List<int> PreloadShaderBlocks;
-        public static bool Loaded = false;
 
         static ResourceIndex()
         {
@@ -31,8 +28,6 @@ namespace AssetStudio
             BundleDependencyMap = new Dictionary<int, List<int>>();
             BlockInfoMap = new Dictionary<int, Block>();
             BlockMap = new Dictionary<int, byte>();
-            PreloadBlocks = new List<int>();
-            PreloadShaderBlocks = new List<int>();
         }
         public static void FromFile(string path)
         {
@@ -40,7 +35,6 @@ namespace AssetStudio
             try
             {
                 Clear();
-                Loaded = false;
 
                 using (var stream = File.OpenRead(path))
                 {
@@ -56,7 +50,6 @@ namespace AssetStudio
                     if (obj != null)
                     {
                         MapToResourceIndex(obj);
-                        Loaded = true;
                     }
                 }
             }
@@ -81,8 +74,6 @@ namespace AssetStudio
         {
             BundleDependencyMap = assetIndex.Dependencies;
             BlockSortList = assetIndex.SortList.ConvertAll(x => (int)x);
-            PreloadBlocks = assetIndex.PreloadBlocks.ConvertAll(x => (int)x);
-            PreloadShaderBlocks = assetIndex.PreloadShaderBlocks.ConvertAll(x => (int)x);
             foreach (var asset in assetIndex.SubAssets)
             {
                 foreach (var subAsset in asset.Value)
@@ -156,12 +147,6 @@ namespace AssetStudio
             var asset = new Asset() { Hash = hash };
             return AssetLocationMap.ElementAtOrDefault(asset.Pre).ContainsKey(asset.Last);
         }
-
-        //public void AddAssetLocation(BundleInfo bundle, Asset asset)
-        //{
-        //    AssetMap[asset.Last] = asset.Hash;
-        //    AssetLocationMap[asset.Pre].Add(asset.Last, bundle);
-        //}
     }
     public class BundleInfo
     {

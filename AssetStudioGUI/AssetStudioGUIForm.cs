@@ -127,6 +127,8 @@ namespace AssetStudioGUI
             displayAll.Checked = Properties.Settings.Default.displayAll;
             displayInfo.Checked = Properties.Settings.Default.displayInfo;
             enablePreview.Checked = Properties.Settings.Default.enablePreview;
+            AssetBundle.Exportable = Properties.Settings.Default.exportAssetBundle;
+            IndexObject.Exportable = Properties.Settings.Default.exportIndexObject;
             Renderer.Parsable = !Properties.Settings.Default.disableRndrr;
             MiHoYoBinData.doXOR = Properties.Settings.Default.enableXor;
             MiHoYoBinData.Key = Properties.Settings.Default.key;
@@ -260,7 +262,7 @@ namespace AssetStudioGUI
             }
             else
             {
-                Text = $"GenshinStudio v{Application.ProductVersion} - no productName - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"GenshinStudio v{Application.ProductVersion} - Genshin Impact - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
 
             assetListView.VirtualListSize = visibleAssets.Count;
@@ -797,6 +799,14 @@ namespace AssetStudioGUI
                     case AnimationClip _:
                         StatusStripUpdate("Can be exported with Animator or Objects");
                         break;
+                    case AssetBundle m_AssetBundle:
+                        PreviewAssetBundle(m_AssetBundle);
+                        StatusStripUpdate("Can be exported to JSON file.");
+                        break;
+                    case IndexObject m_IndexObject:
+                        PreviewIndexObject(m_IndexObject);
+                        StatusStripUpdate("Can be exported to JSON file.");
+                        break;
                     case MiHoYoBinData m_MiHoYoBinData:
                         PreviewMiHoYoBinData(m_MiHoYoBinData);
                         StatusStripUpdate("Can be exported/previewed as JSON if data is a valid JSON (check XOR).");
@@ -883,40 +893,40 @@ namespace AssetStudioGUI
             {
                 switch (m_AudioClip.m_Type)
                 {
-                    case AudioType.ACC:
+                    case FMODSoundType.ACC:
                         assetItem.InfoText += "Acc";
                         break;
-                    case AudioType.AIFF:
+                    case FMODSoundType.AIFF:
                         assetItem.InfoText += "AIFF";
                         break;
-                    case AudioType.IT:
+                    case FMODSoundType.IT:
                         assetItem.InfoText += "Impulse tracker";
                         break;
-                    case AudioType.MOD:
+                    case FMODSoundType.MOD:
                         assetItem.InfoText += "Protracker / Fasttracker MOD";
                         break;
-                    case AudioType.MPEG:
+                    case FMODSoundType.MPEG:
                         assetItem.InfoText += "MP2/MP3 MPEG";
                         break;
-                    case AudioType.OGGVORBIS:
+                    case FMODSoundType.OGGVORBIS:
                         assetItem.InfoText += "Ogg vorbis";
                         break;
-                    case AudioType.S3M:
+                    case FMODSoundType.S3M:
                         assetItem.InfoText += "ScreamTracker 3";
                         break;
-                    case AudioType.WAV:
+                    case FMODSoundType.WAV:
                         assetItem.InfoText += "Microsoft WAV";
                         break;
-                    case AudioType.XM:
+                    case FMODSoundType.XM:
                         assetItem.InfoText += "FastTracker 2 XM";
                         break;
-                    case AudioType.XMA:
+                    case FMODSoundType.XMA:
                         assetItem.InfoText += "Xbox360 XMA";
                         break;
-                    case AudioType.VAG:
+                    case FMODSoundType.VAG:
                         assetItem.InfoText += "PlayStation Portable ADPCM";
                         break;
-                    case AudioType.AUDIOQUEUE:
+                    case FMODSoundType.AUDIOQUEUE:
                         assetItem.InfoText += "iPhone";
                         break;
                     default:
@@ -940,7 +950,7 @@ namespace AssetStudioGUI
                     case AudioCompressionFormat.MP3:
                         assetItem.InfoText += "MP3";
                         break;
-                    case AudioCompressionFormat.VAG:
+                    case AudioCompressionFormat.PSMVAG:
                         assetItem.InfoText += "PlayStation Portable ADPCM";
                         break;
                     case AudioCompressionFormat.HEVAG:
@@ -1023,6 +1033,17 @@ namespace AssetStudioGUI
                 obj = m_MonoBehaviour.ToType(type);
             }
             var str = JsonConvert.SerializeObject(obj, Formatting.Indented);
+            PreviewText(str);
+        }
+
+        private void PreviewAssetBundle(AssetBundle m_AssetBundle)
+        {
+            var str = JsonConvert.SerializeObject(m_AssetBundle, Formatting.Indented);
+            PreviewText(str);
+        }
+        private void PreviewIndexObject(IndexObject m_IndexObject)
+        {
+            var str = JsonConvert.SerializeObject(m_IndexObject, Formatting.Indented);
             PreviewText(str);
         }
 

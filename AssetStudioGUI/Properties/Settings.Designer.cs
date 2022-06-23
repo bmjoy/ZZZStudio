@@ -161,7 +161,37 @@ namespace AssetStudioGUI.Properties
                 this["convertType"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool exportAssetBundle
+        {
+            get
+            {
+                return ((bool)(this["exportAssetBundle"]));
+            }
+            set
+            {
+                this["exportAssetBundle"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool exportIndexObject
+        {
+            get
+            {
+                return ((bool)(this["exportIndexObject"]));
+            }
+            set
+            {
+                this["exportIndexObject"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]

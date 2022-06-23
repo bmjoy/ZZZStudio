@@ -90,6 +90,28 @@ namespace AssetStudio
             return null;
         }
 
+        public ImportedFrame FindRelativeFrameWithPath(string path)
+        {
+            var subs = path.Split(new[] { '/' }, 2);
+            foreach (var child in children)
+            {
+                if (child.Name == subs[0])
+                {
+                    if (subs.Length == 1)
+                    {
+                        return child;
+                    }
+                    else
+                    {
+                        var result = child.FindRelativeFrameWithPath(subs[1]);
+                        if (result != null)
+                            return result;
+                    }
+                }
+            }
+            return null;
+        }
+
         public ImportedFrame FindChild(string name, bool recursive = true)
         {
             foreach (var child in children)

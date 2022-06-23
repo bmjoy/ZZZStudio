@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace AssetStudio
 {
@@ -15,10 +16,16 @@ namespace AssetStudio
         }
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
     public sealed class IndexObject : NamedObject
     {
+        public static bool Exportable;
+
+        [JsonProperty]
         public int Count;
+        [JsonProperty]
         public KeyValuePair<string, Index>[] AssetMap;
+        [JsonProperty]
         public Dictionary<long, string> Names = new Dictionary<long, string>();
 
         public IndexObject(ObjectReader reader) : base(reader)

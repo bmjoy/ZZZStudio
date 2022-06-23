@@ -107,6 +107,26 @@ namespace AssetStudioGUI
             return true;
         }
 
+        public static bool ExportAssetBundle(AssetItem item, string exportPath)
+        {
+            if (!TryExportFile(exportPath, item, ".json", out var exportFullPath))
+                return false;
+            var m_AssetBundle = (AssetBundle)item.Asset;
+            var str = JsonConvert.SerializeObject(m_AssetBundle, Formatting.Indented);
+            File.WriteAllText(exportFullPath, str);
+            return true;
+        }
+
+        public static bool ExportIndexObject(AssetItem item, string exportPath)
+        {
+            if (!TryExportFile(exportPath, item, ".json", out var exportFullPath))
+                return false;
+            var m_IndexObject = (IndexObject)item.Asset;
+            var str = JsonConvert.SerializeObject(m_IndexObject, Formatting.Indented);
+            File.WriteAllText(exportFullPath, str);
+            return true;
+        }
+
         public static bool ExportMiHoYoBinData(AssetItem item, string exportPath)
         {
             string exportFullPath;
@@ -404,6 +424,10 @@ namespace AssetStudioGUI
                     return ExportAnimator(item, exportPath);
                 case ClassIDType.AnimationClip:
                     return false;
+                case ClassIDType.AssetBundle:
+                    return ExportAssetBundle(item, exportPath);
+                case ClassIDType.IndexObject:
+                    return ExportIndexObject(item, exportPath);
                 case ClassIDType.MiHoYoBinData:
                     return ExportMiHoYoBinData(item, exportPath);
                 default:

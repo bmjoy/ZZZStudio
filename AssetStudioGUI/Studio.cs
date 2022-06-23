@@ -227,7 +227,7 @@ namespace AssetStudioGUI
                             productName = m_PlayerSettings.productName;
                             break;
                         case AssetBundle m_AssetBundle:
-                            foreach (var m_Container in m_AssetBundle.m_Container)
+                            foreach (var m_Container in m_AssetBundle.Container)
                             {
                                 var preloadIndex = m_Container.Value.preloadIndex;
                                 var preloadSize = m_Container.Value.preloadSize;
@@ -240,17 +240,19 @@ namespace AssetStudioGUI
                                         var path = ResourceIndex.GetBundlePath(last);
                                         if (!string.IsNullOrEmpty(path))
                                         {
-                                            containers.Add((m_AssetBundle.m_PreloadTable[k], path));
+                                            containers.Add((m_AssetBundle.PreloadTable[k], path));
                                             continue;
                                         }
                                     }
-                                    containers.Add((m_AssetBundle.m_PreloadTable[k], m_Container.Key));
+                                    containers.Add((m_AssetBundle.PreloadTable[k], m_Container.Key));
                                 }
                             }
                             assetItem.Text = m_AssetBundle.m_Name;
+                            exportable = AssetBundle.Exportable;
                             break;
                         case IndexObject m_IndexObject:
                             assetItem.Text = "IndexObject";
+                            exportable = IndexObject.Exportable;
                             break;
                         case ResourceManager m_ResourceManager:
                             foreach (var m_Container in m_ResourceManager.m_Container)

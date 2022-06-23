@@ -13,7 +13,7 @@ namespace AssetStudio
     public static class AsbManager
     {
         public static Dictionary<string, BLKEntry> BLKMap = new Dictionary<string, BLKEntry>();
-        public static Dictionary<string, List<long>> offsets = new Dictionary<string, List<long>>();
+        public static Dictionary<string, HashSet<long>> offsets = new Dictionary<string, HashSet<long>>();
 
         public static void BuildBLKMap(string path, List<string> files)
         {
@@ -41,10 +41,10 @@ namespace AssetStudio
                                     {
                                         var objectReader = new ObjectReader(assetsFile.reader, assetsFile, obj);
                                         var asb = new AssetBundle(objectReader);
-                                        if (!BLKMap.ContainsKey(asb.m_AssetBundleName))
+                                        if (!BLKMap.ContainsKey(asb.AssetBundleName))
                                         {
                                             BLKMap.Add(asb.m_Name, new BLKEntry());
-                                            BLKMap[asb.m_Name].Dependancies.AddRange(asb.m_Dependencies);
+                                            BLKMap[asb.m_Name].Dependancies.AddRange(asb.Dependencies);
                                         }    
                                         BLKMap[asb.m_Name].Location.Add(file, kvp.Key); 
                                     }
@@ -126,51 +126,38 @@ namespace AssetStudio
         {
             if (BLKMap.TryGetValue(asb, out var asbEntry))
             {
-                var locationPair = asbEntry.Location.Pick();
+                var locationPair = asbEntry.Location.Pick(offsets.LastOrDefault().Key);
                 var path = locationPair.Key;
                 if (!offsets.ContainsKey(path))
-                    offsets.Add(path, new List<long>());
+                    offsets.Add(path, new HashSet<long>());
                 offsets[path].Add(locationPair.Value);
+                foreach (var dep in asbEntry.Dependancies)
+                    AddCabOffset(dep);
             }
         }
 
-        public static void FindAsbFromBLK(string path, ref List<string> asbs)
+        public static bool FindAsbFromBLK(string path, out HashSet<string> asbs)
         {
-            var fileName = Path.GetFileName(path);
+            asbs = new HashSet<string>();
             foreach (var pair in BLKMap)
-            {
-                if (pair.Value.Location.Keys.Select(x => Path.GetFileName(x)).Contains(fileName))
-                {
+                if (pair.Value.Location.ContainsKey(path))
                     asbs.Add(pair.Key);
-                    asbs.AddRange(pair.Value.Dependancies);
-                }
-            }
+            return asbs.Count != 0;
         }
 
         public static void ProcessBLKFiles(ref string[] files)
         {
-            var newFiles = new List<string>();
-            var asbs = new List<string>();
+            var newFiles = files.ToList();
             foreach (var file in files)
-                FindAsbFromBLK(file, ref asbs);
-
-            asbs = asbs.Distinct().ToList();
-            asbs.ForEach(AddCabOffset);
-
-            offsets = offsets.ToDictionary(x => x.Key, x => x.Value.OrderBy(y => y).ToList());
-            newFiles.AddRange(offsets.Keys.ToList());
-
-            if (!ResourceIndex.Loaded)
             {
-                files = newFiles.ToArray();
-                return;
+                if (!offsets.ContainsKey(file))
+                    offsets.Add(file, new HashSet<long>());
+                if (FindAsbFromBLK(file, out var asbs))
+                    foreach (var asb in asbs)
+                        AddCabOffset(asb);
             }
-
-            files = newFiles.OrderBy(x =>
-            {
-                var index = ResourceIndex.BlockSortList.IndexOf(Convert.ToInt32(Path.GetFileNameWithoutExtension(x)));
-                return index < 0 ? int.MaxValue : index;
-            }).ToArray();
+            newFiles.AddRange(offsets.Keys.ToList());
+            files = newFiles.ToArray();
         }
 
         public static void ProcessDependancies(ref string[] files)
