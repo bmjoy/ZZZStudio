@@ -1,10 +1,4 @@
 # GenshinStudio
-## Notice:
-__*This project has been archieved/discontinued, it will not longer recieve support/updates.*__
-
-It was a great experiance working on this project, but unfortunately time has come to move on.
-
-I wish the best for everyone, until we meet again in future projects !!
 _____________________________________________________________________________________________________________________________
 Check out the [original AssetStudio project](https://github.com/Perfare/AssetStudio) for more information.
 
