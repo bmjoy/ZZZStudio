@@ -1,5 +1,4 @@
 # GenshinStudio
-_____________________________________________________________________________________________________________________________
 Check out the [original AssetStudio project](https://github.com/Perfare/AssetStudio) for more information.
 
 This is the release of GenshinStudio, Modded AssetStudio that should work with Genshin Impact/YuanShen.
