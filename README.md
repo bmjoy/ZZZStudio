@@ -8,10 +8,12 @@ ________________________________________________________________________________
 
 Some features are:
 ```
-- Integration with `Radioegor146` repo to load asset_index through `Options -> Specify AI version`.
-- Exportable Assets (not all of them) with XOR/JSON support for `MiHoYoBinData`
+- Integration with "Radioegor146" repo to load asset_index through "Options -> Specify AI version".
+- Exportable Assets (not all of them) with XOR/JSON support for "MiHoYoBinData"
 - Togglable debug console.
 - Container/filename recovery for Assets.
+- Build Asset List of assets inside game files (use "Option -> Export Options -> AM Format" to change between XML and JSON).
+- CLI version (beta).
 ```
 _____________________________________________________________________________________________________________________________
 How to use:
@@ -19,6 +21,11 @@ How to use:
 ```
 1. Build BLK Map (Misc. -> Build BLKMap).
 2. Load BLK files.
+```
+
+CLI Version:
+```
+AssetStudioCLI input_path output_path [formats...]
 ```
 
 NOTE: in case of any `MeshRenderer/SkinnedMeshRenderer` errors, make sure to enable `Disable Renderer` option in `Export Options` before loading assets.
