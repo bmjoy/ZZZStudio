@@ -69,6 +69,8 @@
             this.enableXor = new System.Windows.Forms.CheckBox();
             this.key = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
+            this.assetsMapFormat = new System.Windows.Forms.ComboBox();
+            this.label8 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -103,6 +105,8 @@
             // groupBox1
             // 
             this.groupBox1.AutoSize = true;
+            this.groupBox1.Controls.Add(this.assetsMapFormat);
+            this.groupBox1.Controls.Add(this.label8);
             this.groupBox1.Controls.Add(this.disableRndrr);
             this.groupBox1.Controls.Add(this.exportIndexObject);
             this.groupBox1.Controls.Add(this.exportAssetBundle);
@@ -557,6 +561,27 @@
             this.label7.TabIndex = 7;
             this.label7.Text = "Key";
             // 
+            // assetsMapFormat
+            // 
+            this.assetsMapFormat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.assetsMapFormat.FormattingEnabled = true;
+            this.assetsMapFormat.Items.AddRange(new object[] {
+            "XML",
+            "JSON"});
+            this.assetsMapFormat.Location = new System.Drawing.Point(161, 215);
+            this.assetsMapFormat.Name = "assetsMapFormat";
+            this.assetsMapFormat.Size = new System.Drawing.Size(61, 21);
+            this.assetsMapFormat.TabIndex = 20;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(95, 220);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(61, 13);
+            this.label8.TabIndex = 19;
+            this.label8.Text = "AM Format ";
+            // 
             // ExportOptions
             // 
             this.AcceptButton = this.OKbutton;
@@ -635,5 +660,7 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.CheckBox enableXor;
         private System.Windows.Forms.CheckBox disableRndrr;
+        private System.Windows.Forms.ComboBox assetsMapFormat;
+        private System.Windows.Forms.Label label8;
     }
 }

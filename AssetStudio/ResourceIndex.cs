@@ -147,6 +147,16 @@ namespace AssetStudio
             var asset = new Asset() { Hash = hash };
             return AssetLocationMap.ElementAtOrDefault(asset.Pre).ContainsKey(asset.Last);
         }
+        public static string GetContainerFromBinName(string fileName, string binName)
+        {
+            var blkName = Path.GetFileNameWithoutExtension(fileName);
+            var blk = Convert.ToUInt64(blkName);
+            var lastHex = Convert.ToUInt32(binName, 16);
+            var blkHash = (blk << 32) | lastHex;
+            var index = GetAssetIndex(blkHash);
+            var bundleInfo = GetBundleInfo(index);
+            return bundleInfo != null ? bundleInfo.Path : "";
+        }
     }
     public class BundleInfo
     {

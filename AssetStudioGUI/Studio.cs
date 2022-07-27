@@ -1,4 +1,6 @@
 ﻿using AssetStudio;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -29,7 +31,9 @@ namespace AssetStudioGUI
 
     internal enum ExportListType
     {
-        XML
+        XML,
+        JSON,
+        CSV
     }
 
     internal static class Studio
@@ -151,6 +155,68 @@ namespace AssetStudioGUI
             return extractedCount;
         }
 
+        public static List<AssetEntry> BuildAssetMap(List<string> files)
+        {
+            List<AssetEntry> assets = new List<AssetEntry>();
+            for (int i = 0; i < files.Count; i++)
+            {
+                var file = files[i];
+                using (var reader = new FileReader(file))
+                {
+                    var blkFile = new BlkFile(reader);
+                    var fileList = blkFile.Files.SelectMany(x => x.Value.FileList).Where(x => !x.path.Contains(".resS")).ToList();
+                    foreach (var cab in fileList)
+                    {
+                        using (var cabReader = new FileReader(cab.stream))
+                        {
+                            var assetsFile = new SerializedFile(cabReader, null);
+                            var objects = assetsFile.m_Objects.ToArray();
+                            IndexObject indexObject = null;
+                            foreach (var obj in objects)
+                            {
+                                var objectReader = new ObjectReader(assetsFile.reader, assetsFile, obj);
+                                objectReader.Reset();
+                                string name = string.Empty;
+                                switch (objectReader.type)
+                                {
+                                    case ClassIDType.IndexObject:
+                                        indexObject = new IndexObject(objectReader);
+                                        break;
+                                    case ClassIDType.MiHoYoBinData:
+                                        if (indexObject.Names.TryGetValue(objectReader.m_PathID, out var binName))
+                                        {
+                                            var path = ResourceIndex.GetContainerFromBinName(reader.FileName, binName);
+                                            name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : binName;
+                                        }
+                                        break;
+                                    case ClassIDType.GameObject:
+                                        var componentCount = objectReader.ReadInt32();
+                                        objectReader.Position += componentCount * (objectReader.m_Version < SerializedFileFormatVersion.Unknown_14 ? 0x8 : 0xC) + 4;
+                                        name = objectReader.ReadAlignedString();
+                                        break;
+                                    default:
+                                        if (objectReader.HasNamedObject())
+                                        {
+                                            name = objectReader.ReadAlignedString();
+                                        }
+                                        break;
+                                }
+                                if (!string.IsNullOrEmpty(name))
+                                {
+                                    assets.Add(new AssetEntry(name, reader.FullPath, objectReader.m_PathID, objectReader.type));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Logger.Info($"[{i + 1}/{files.Count}] Processed {Path.GetFileName(file)}");
+                Progress.Report(i + 1, files.Count);
+            }
+
+            return assets;
+        }
+
         public static (string, List<TreeNode>) BuildAssetData()
         {
             StatusStripUpdate("Building asset list...");
@@ -268,17 +334,11 @@ namespace AssetStudioGUI
                                     string path = "";
                                     if (Path.GetExtension(assetsFile.originalPath) == ".blk")
                                     {
-                                        var blkName = Path.GetFileNameWithoutExtension(assetsFile.originalPath);
-                                        var blk = Convert.ToUInt64(blkName);
-                                        var lastHex = uint.Parse(binName, NumberStyles.HexNumber);
-                                        var blkHash = (blk << 32) | lastHex;
-                                        var index = ResourceIndex.GetAssetIndex(blkHash);
-                                        var bundleInfo = ResourceIndex.GetBundleInfo(index);
-                                        path = bundleInfo != null ? bundleInfo.Path : "";
+                                        path = ResourceIndex.GetContainerFromBinName(assetsFile.originalPath, binName);
                                     }
                                     else
                                     {
-                                        var last = uint.Parse(binName, NumberStyles.HexNumber);
+                                        var last = Convert.ToUInt32(binName, 16);
                                         path = ResourceIndex.GetBundlePath(last) ?? "";
                                     }
                                     assetItem.Container = path;
@@ -527,6 +587,59 @@ namespace AssetStudioGUI
                 StatusStripUpdate(statusText);
 
                 if (Properties.Settings.Default.openAfterExport && exportedCount > 0)
+                {
+                    OpenFolderInExplorer(savePath);
+                }
+            });
+        }
+
+        public static void ExportAssetsMap(string savePath, List<AssetEntry> toExportAssets, ExportListType exportListType)
+        {
+            ThreadPool.QueueUserWorkItem(state =>
+            {
+                Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+
+                Progress.Reset();
+
+                string filename;
+                switch (exportListType)
+                {
+                    case ExportListType.XML:
+                        filename = Path.Combine(savePath, "assets_map.xml");
+                        var doc = new XDocument(
+                            new XElement("Assets",
+                                new XAttribute("filename", filename),
+                                new XAttribute("createdAt", DateTime.UtcNow.ToString("s")),
+                                toExportAssets.Select(
+                                    asset => new XElement("Asset",
+                                        new XElement("Name", asset.Name),
+                                        new XElement("Type", new XAttribute("id", (int)asset.Type), asset.Type.ToString()),
+                                        new XElement("PathID", asset.PathID),
+                                        new XElement("Source", asset.SourcePath)
+                                    )
+                                )
+                            )
+                        );
+                        doc.Save(filename);
+                        break;
+                    case ExportListType.JSON:
+                        filename = Path.Combine(savePath, "assets_map.json");
+                        using (StreamWriter file = File.CreateText(filename))
+                        {
+                            JsonSerializer serializer = new JsonSerializer() { Formatting = Formatting.Indented };
+                            serializer.Converters.Add(new StringEnumConverter());
+                            serializer.Serialize(file, toExportAssets);
+                        }
+                        break;
+                }
+
+                var statusText = $"Finished exporting asset list with {toExportAssets.Count()} items.";
+
+                StatusStripUpdate(statusText);
+
+                Logger.Info($"AssetMap build successfully !!");
+
+                if (Properties.Settings.Default.openAfterExport && toExportAssets.Count() > 0)
                 {
                     OpenFolderInExplorer(savePath);
                 }

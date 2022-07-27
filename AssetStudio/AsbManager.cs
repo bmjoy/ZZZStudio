@@ -15,7 +15,7 @@ namespace AssetStudio
         public static Dictionary<string, BLKEntry> BLKMap = new Dictionary<string, BLKEntry>();
         public static Dictionary<string, HashSet<long>> offsets = new Dictionary<string, HashSet<long>>();
 
-        public static void BuildBLKMap(string path, List<string> files)
+        public static void BuildBLKMap(List<string> files)
         {
             Logger.Info(string.Format("Building BLKMap"));
             try

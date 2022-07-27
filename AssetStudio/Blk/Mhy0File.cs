@@ -98,23 +98,23 @@ namespace AssetStudio
 
         private void ReadBlocks(EndianBinaryReader reader, Stream blocksStream)
         {
+            var compressedBytes = BigArrayPool<byte>.Shared.Rent(m_BlocksInfo.Max(x => x.CompressedSize));
+            var uncompressedBytes = BigArrayPool<byte>.Shared.Rent(m_BlocksInfo.Max(x => x.UncompressedSize));
             foreach (var blockInfo in m_BlocksInfo)
             {
                 var compressedSize = blockInfo.CompressedSize;
-                var compressedBytes = BigArrayPool<byte>.Shared.Rent(compressedSize);
                 reader.Read(compressedBytes, 0, compressedSize);
                 if (compressedSize < 0x10)
                     throw new Exception($"Wrong compressed length: {compressedSize}");
                 compressedBytes = Crypto.DescrambleEntry(compressedBytes);
                 var uncompressedSize = blockInfo.UncompressedSize;
-                var uncompressedBytes = BigArrayPool<byte>.Shared.Rent(uncompressedSize);
-                var numWrite = LZ4Codec.Decode(compressedBytes, 0xC, compressedSize - 0xC, uncompressedBytes, 0, uncompressedSize);
+                var numWrite = LZ4Codec.Decode(compressedBytes.AsSpan(0xC, compressedSize - 0xC), uncompressedBytes.AsSpan(0, uncompressedSize));
                 if (numWrite != uncompressedSize)
                     throw new IOException($"Lz4 decompression error, write {numWrite} bytes but expected {uncompressedSize} bytes");
                 blocksStream.Write(uncompressedBytes, 0, uncompressedSize);
-                BigArrayPool<byte>.Shared.Return(compressedBytes);
-                BigArrayPool<byte>.Shared.Return(uncompressedBytes);
             }
+            BigArrayPool<byte>.Shared.Return(compressedBytes);
+            BigArrayPool<byte>.Shared.Return(uncompressedBytes);
         }
 
         private void ReadFiles(Stream blocksStream, string path)

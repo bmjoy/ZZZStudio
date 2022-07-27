@@ -81,6 +81,7 @@
             this.console = new System.Windows.Forms.ToolStripMenuItem();
             this.miscToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buildBLKMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buildAssetMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
@@ -564,7 +565,8 @@
             // miscToolStripMenuItem
             // 
             this.miscToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.buildBLKMapToolStripMenuItem});
+            this.buildBLKMapToolStripMenuItem,
+            this.buildAssetMapToolStripMenuItem});
             this.miscToolStripMenuItem.Name = "miscToolStripMenuItem";
             this.miscToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.miscToolStripMenuItem.Text = "Misc.";
@@ -575,6 +577,13 @@
             this.buildBLKMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.buildBLKMapToolStripMenuItem.Text = "Build BLKMap";
             this.buildBLKMapToolStripMenuItem.Click += new System.EventHandler(this.buildBLKMapToolStripMenuItem_Click);
+            // 
+            // buildAssetMapToolStripMenuItem
+            // 
+            this.buildAssetMapToolStripMenuItem.Name = "buildAssetMapToolStripMenuItem";
+            this.buildAssetMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.buildAssetMapToolStripMenuItem.Text = "Build AssetMap";
+            this.buildAssetMapToolStripMenuItem.Click += new System.EventHandler(this.buildAssetMapToolStripMenuItem_Click);
             // 
             // splitContainer1
             // 
@@ -1266,6 +1275,7 @@
         private System.Windows.Forms.ToolStripMenuItem console;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem16;
         private System.Windows.Forms.ToolStripComboBox specifyAIVersion;
+        private System.Windows.Forms.ToolStripMenuItem buildAssetMapToolStripMenuItem;
     }
 }
 

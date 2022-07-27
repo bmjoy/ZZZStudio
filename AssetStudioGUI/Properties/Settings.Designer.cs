@@ -236,6 +236,21 @@ namespace AssetStudioGUI.Properties
                 this["enableXor"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int assetsMapFormat
+        {
+            get
+            {
+                return ((int)(this["assetsMapFormat"]));
+            }
+            set
+            {
+                this["assetsMapFormat"] = value;
+            }
+        }
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]

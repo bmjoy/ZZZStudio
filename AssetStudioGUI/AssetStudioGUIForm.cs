@@ -2151,7 +2151,31 @@ namespace AssetStudioGUI
                 Logger.Info("scanning for BLK files");
                 var files = Directory.GetFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories).ToList();
                 Logger.Info(string.Format("found {0} BLK files", files.Count()));
-                await Task.Run(() => AsbManager.BuildBLKMap(openFolderDialog.Folder, files));
+                await Task.Run(() => AsbManager.BuildBLKMap(files));
+            }
+        }
+
+        private async void buildAssetMapToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var openFolderDialog = new OpenFolderDialog();
+            openFolderDialog.Title = "Select GenshinImpact/YuanShen_Data Folder";
+            if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
+            {
+                Logger.Info("scanning for BLK files");
+                var files = Directory.GetFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories).ToList();
+                Logger.Info(string.Format("found {0} BLK files", files.Count()));
+                
+                var saveFolderDialog = new OpenFolderDialog();
+                saveFolderDialog.InitialFolder = saveDirectoryBackup;
+                saveFolderDialog.Title = "Select Output Folder";
+                if (saveFolderDialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    timer.Stop();
+                    saveDirectoryBackup = saveFolderDialog.Folder;
+                    List<AssetEntry> toExportAssets = await Task.Run(() => BuildAssetMap(files));
+                    var exportFormat = (ExportListType)Properties.Settings.Default.assetsMapFormat;
+                    ExportAssetsMap(saveFolderDialog.Folder, toExportAssets, exportFormat);
+                }
             }
         }
 
