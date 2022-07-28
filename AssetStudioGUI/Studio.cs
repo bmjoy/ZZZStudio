@@ -158,6 +158,8 @@ namespace AssetStudioGUI
         public static List<AssetEntry> BuildAssetMap(List<string> files)
         {
             List<AssetEntry> assets = new List<AssetEntry>();
+            Dictionary<long, string> NameLUT = new Dictionary<long, string>();
+            List<(int, long)> PPtrLUT = new List<(int, long)>();
             for (int i = 0; i < files.Count; i++)
             {
                 var file = files[i];
@@ -170,7 +172,7 @@ namespace AssetStudioGUI
                         using (var cabReader = new FileReader(cab.stream))
                         {
                             var assetsFile = new SerializedFile(cabReader, null);
-                            var objects = assetsFile.m_Objects.ToArray();
+                            var objects = assetsFile.m_Objects.Where(x => x.HasExportableType()).ToArray();
                             IndexObject indexObject = null;
                             foreach (var obj in objects)
                             {
@@ -179,8 +181,25 @@ namespace AssetStudioGUI
                                 string name = string.Empty;
                                 switch (objectReader.type)
                                 {
-                                    case ClassIDType.IndexObject:
-                                        indexObject = new IndexObject(objectReader);
+                                    case ClassIDType.GameObject:
+                                        var gameObject = new GameObject(objectReader);
+                                        if (!NameLUT.ContainsKey(objectReader.m_PathID))
+                                        {
+                                            NameLUT.Add(objectReader.m_PathID, gameObject.m_Name);
+                                        }
+                                        break;
+                                    case ClassIDType.Shader:
+                                        name = objectReader.ReadAlignedString();
+                                        if (string.IsNullOrEmpty(name))
+                                        {
+                                            var m_parsedForm = new SerializedShader(objectReader);
+                                            name = m_parsedForm.m_Name;
+                                        }
+                                        break;
+                                    case ClassIDType.Animator:
+                                        var gameObjectPPtr = new PPtr<GameObject>(objectReader);
+                                        PPtrLUT.Add((assets.Count, gameObjectPPtr.m_PathID));
+                                        name = "AnimatorPlaceholder";
                                         break;
                                     case ClassIDType.MiHoYoBinData:
                                         if (indexObject.Names.TryGetValue(objectReader.m_PathID, out var binName))
@@ -189,16 +208,12 @@ namespace AssetStudioGUI
                                             name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : binName;
                                         }
                                         break;
-                                    case ClassIDType.GameObject:
-                                        var componentCount = objectReader.ReadInt32();
-                                        objectReader.Position += componentCount * (objectReader.m_Version < SerializedFileFormatVersion.Unknown_14 ? 0x8 : 0xC) + 4;
-                                        name = objectReader.ReadAlignedString();
+                                    case ClassIDType.IndexObject:
+                                        indexObject = new IndexObject(objectReader);
+                                        name = "IndexObject";
                                         break;
                                     default:
-                                        if (objectReader.HasNamedObject())
-                                        {
-                                            name = objectReader.ReadAlignedString();
-                                        }
+                                        name = objectReader.ReadAlignedString();
                                         break;
                                 }
                                 if (!string.IsNullOrEmpty(name))
@@ -212,6 +227,21 @@ namespace AssetStudioGUI
 
                 Logger.Info($"[{i + 1}/{files.Count}] Processed {Path.GetFileName(file)}");
                 Progress.Report(i + 1, files.Count);
+            }
+
+            Logger.Info("Processing PPtr names");
+            foreach (var pptr in PPtrLUT)
+            {
+                var asset = assets[pptr.Item1];
+                if (NameLUT.TryGetValue(pptr.Item2, out var name))
+                {
+                    asset.Name = name;
+                }
+                else
+                {
+                    Logger.Warning($"No name found for pathID {pptr.Item2}, removing...");
+                    assets.Remove(asset);
+                }
             }
 
             return assets;

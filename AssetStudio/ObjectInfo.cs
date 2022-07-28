@@ -16,5 +16,21 @@ namespace AssetStudio
 
         public long m_PathID;
         public SerializedType serializedType;
+
+        public bool HasExportableType()
+        {
+            return classID == (int)ClassIDType.GameObject
+                || classID == (int)ClassIDType.Texture2D
+                || classID == (int)ClassIDType.Mesh
+                || classID == (int)ClassIDType.Shader
+                || classID == (int)ClassIDType.TextAsset
+                || classID == (int)ClassIDType.AnimationClip
+                || classID == (int)ClassIDType.Animator
+                || classID == (int)ClassIDType.Font
+                || (classID == (int)ClassIDType.AssetBundle && AssetBundle.Exportable)
+                || classID == (int)ClassIDType.Sprite
+                || (classID == (int)ClassIDType.MiHoYoBinData && IndexObject.Exportable)
+                || (classID == (int)ClassIDType.IndexObject && IndexObject.Exportable);
+        }
     }
 }
