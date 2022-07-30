@@ -59,8 +59,8 @@ namespace AssetStudioCLI
             if (!TryExportFile(exportPath, item, ".shader", out var exportFullPath))
                 return false;
             var m_Shader = (Shader)item.Asset;
-            var bytes = m_Shader.Convert();
-            File.WriteAllBytes(exportFullPath, bytes);
+            var str = m_Shader.Convert();
+            File.WriteAllText(exportFullPath, str);
             return true;
         }
 
@@ -87,49 +87,6 @@ namespace AssetStudioCLI
             File.WriteAllText(exportFullPath, str);
             return true;
         }
-
-        public static bool ExportIndexObject(AssetItem item, string exportPath)
-        {
-            if (!TryExportFile(exportPath, item, ".json", out var exportFullPath))
-                return false;
-            var m_IndexObject = (IndexObject)item.Asset;
-            var str = JsonConvert.SerializeObject(m_IndexObject, Formatting.Indented);
-            File.WriteAllText(exportFullPath, str);
-            return true;
-        }
-
-        public static bool ExportMiHoYoBinData(AssetItem item, string exportPath)
-        {
-            string exportFullPath;
-            if (item.Asset is MiHoYoBinData m_MiHoYoBinData)
-            {
-                switch (m_MiHoYoBinData.Type)
-                {
-                    case MiHoYoBinDataType.JSON:
-                        if (!TryExportFile(exportPath, item, ".json", out exportFullPath))
-                            return false;
-                        var json = m_MiHoYoBinData.Dump() as string;
-                        if (json.Length != 0)
-                        {
-                            File.WriteAllText(exportFullPath, json);
-                            return true;
-                        }
-                        break;
-                    case MiHoYoBinDataType.Bytes:
-                        if (!TryExportFile(exportPath, item, ".bin", out exportFullPath))
-                            return false;
-                        var bytes = m_MiHoYoBinData.Dump() as byte[];
-                        if (bytes.Length != 0)
-                        {
-                            File.WriteAllBytes(exportFullPath, bytes);
-                            return true;
-                        }
-                        break;
-                }
-            }
-            return false;
-        }
-
         public static bool ExportFont(AssetItem item, string exportPath)
         {
             var m_Font = (Font)item.Asset;
@@ -340,10 +297,6 @@ namespace AssetStudioCLI
                     return false;
                 case ClassIDType.AssetBundle:
                     return ExportAssetBundle(item, exportPath);
-                case ClassIDType.IndexObject:
-                    return ExportIndexObject(item, exportPath);
-                case ClassIDType.MiHoYoBinData:
-                    return ExportMiHoYoBinData(item, exportPath);
                 default:
                     return ExportRawFile(item, exportPath);
             }

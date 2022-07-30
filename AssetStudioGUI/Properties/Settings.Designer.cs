@@ -206,36 +206,6 @@ namespace AssetStudioGUI.Properties
                 this["disableRndrr"] = value;
             }
         }
-
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("147")]
-        public byte key
-        {
-            get
-            {
-                return ((byte)(this["key"]));
-            }
-            set
-            {
-                this["key"] = value;
-            }
-        }
-
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool enableXor
-        {
-            get
-            {
-                return ((bool)(this["enableXor"]));
-            }
-            set
-            {
-                this["enableXor"] = value;
-            }
-        }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -249,6 +219,21 @@ namespace AssetStudioGUI.Properties
             set
             {
                 this["assetsMapFormat"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ignoreController
+        {
+            get
+            {
+                return ((bool)(this["ignoreController"]));
+            }
+            set
+            {
+                this["ignoreController"] = value;
             }
         }
 

@@ -32,8 +32,10 @@
             this.OKbutton = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.ignoreController = new System.Windows.Forms.CheckBox();
+            this.assetsMapFormat = new System.Windows.Forms.ComboBox();
+            this.label8 = new System.Windows.Forms.Label();
             this.disableRndrr = new System.Windows.Forms.CheckBox();
-            this.exportIndexObject = new System.Windows.Forms.CheckBox();
             this.exportAssetBundle = new System.Windows.Forms.CheckBox();
             this.openAfterExport = new System.Windows.Forms.CheckBox();
             this.restoreExtensionName = new System.Windows.Forms.CheckBox();
@@ -65,20 +67,12 @@
             this.exportAllNodes = new System.Windows.Forms.CheckBox();
             this.eulerFilter = new System.Windows.Forms.CheckBox();
             this.exportUvsTooltip = new System.Windows.Forms.ToolTip(this.components);
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.enableXor = new System.Windows.Forms.CheckBox();
-            this.key = new System.Windows.Forms.NumericUpDown();
-            this.label7 = new System.Windows.Forms.Label();
-            this.assetsMapFormat = new System.Windows.Forms.ComboBox();
-            this.label8 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scaleFactor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.boneSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.filterPrecision)).BeginInit();
-            this.groupBox3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.key)).BeginInit();
             this.SuspendLayout();
             // 
             // OKbutton
@@ -105,10 +99,10 @@
             // groupBox1
             // 
             this.groupBox1.AutoSize = true;
+            this.groupBox1.Controls.Add(this.ignoreController);
             this.groupBox1.Controls.Add(this.assetsMapFormat);
             this.groupBox1.Controls.Add(this.label8);
             this.groupBox1.Controls.Add(this.disableRndrr);
-            this.groupBox1.Controls.Add(this.exportIndexObject);
             this.groupBox1.Controls.Add(this.exportAssetBundle);
             this.groupBox1.Controls.Add(this.openAfterExport);
             this.groupBox1.Controls.Add(this.restoreExtensionName);
@@ -119,32 +113,53 @@
             this.groupBox1.Controls.Add(this.converttexture);
             this.groupBox1.Location = new System.Drawing.Point(12, 13);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(232, 258);
+            this.groupBox1.Size = new System.Drawing.Size(232, 303);
             this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export";
             // 
+            // ignoreController
+            // 
+            this.ignoreController.AutoSize = true;
+            this.ignoreController.Checked = true;
+            this.ignoreController.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ignoreController.Location = new System.Drawing.Point(6, 241);
+            this.ignoreController.Name = "ignoreController";
+            this.ignoreController.Size = new System.Drawing.Size(157, 17);
+            this.ignoreController.TabIndex = 21;
+            this.ignoreController.Text = "Ignore Controller Animations";
+            this.ignoreController.UseVisualStyleBackColor = true;
+            // 
+            // assetsMapFormat
+            // 
+            this.assetsMapFormat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.assetsMapFormat.FormattingEnabled = true;
+            this.assetsMapFormat.Items.AddRange(new object[] {
+            "XML",
+            "JSON"});
+            this.assetsMapFormat.Location = new System.Drawing.Point(70, 263);
+            this.assetsMapFormat.Name = "assetsMapFormat";
+            this.assetsMapFormat.Size = new System.Drawing.Size(61, 21);
+            this.assetsMapFormat.TabIndex = 20;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(6, 266);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(61, 13);
+            this.label8.TabIndex = 19;
+            this.label8.Text = "AM Format ";
+            // 
             // disableRndrr
             // 
             this.disableRndrr.AutoSize = true;
-            this.disableRndrr.Location = new System.Drawing.Point(97, 196);
+            this.disableRndrr.Location = new System.Drawing.Point(6, 219);
             this.disableRndrr.Name = "disableRndrr";
             this.disableRndrr.Size = new System.Drawing.Size(113, 17);
             this.disableRndrr.TabIndex = 13;
             this.disableRndrr.Text = "Disable Renderers";
             this.disableRndrr.UseVisualStyleBackColor = true;
-            // 
-            // exportIndexObject
-            // 
-            this.exportIndexObject.AutoSize = true;
-            this.exportIndexObject.Checked = true;
-            this.exportIndexObject.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.exportIndexObject.Location = new System.Drawing.Point(6, 219);
-            this.exportIndexObject.Name = "exportIndexObject";
-            this.exportIndexObject.Size = new System.Drawing.Size(83, 17);
-            this.exportIndexObject.TabIndex = 12;
-            this.exportIndexObject.Text = "IndexObject";
-            this.exportIndexObject.UseVisualStyleBackColor = true;
             // 
             // exportAssetBundle
             // 
@@ -514,74 +529,6 @@
             this.eulerFilter.Text = "EulerFilter";
             this.eulerFilter.UseVisualStyleBackColor = true;
             // 
-            // groupBox3
-            // 
-            this.groupBox3.AutoSize = true;
-            this.groupBox3.Controls.Add(this.enableXor);
-            this.groupBox3.Controls.Add(this.key);
-            this.groupBox3.Controls.Add(this.label7);
-            this.groupBox3.Location = new System.Drawing.Point(12, 274);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(232, 101);
-            this.groupBox3.TabIndex = 11;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "MiHoYoBinData";
-            // 
-            // enableXor
-            // 
-            this.enableXor.AutoSize = true;
-            this.enableXor.Checked = true;
-            this.enableXor.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.enableXor.Location = new System.Drawing.Point(11, 22);
-            this.enableXor.Name = "enableXor";
-            this.enableXor.Size = new System.Drawing.Size(85, 17);
-            this.enableXor.TabIndex = 12;
-            this.enableXor.Text = "Enable XOR";
-            this.enableXor.UseVisualStyleBackColor = true;
-            // 
-            // key
-            // 
-            this.key.Hexadecimal = true;
-            this.key.Location = new System.Drawing.Point(135, 21);
-            this.key.Maximum = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            this.key.Name = "key";
-            this.key.Size = new System.Drawing.Size(61, 20);
-            this.key.TabIndex = 8;
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(104, 23);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(25, 13);
-            this.label7.TabIndex = 7;
-            this.label7.Text = "Key";
-            // 
-            // assetsMapFormat
-            // 
-            this.assetsMapFormat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.assetsMapFormat.FormattingEnabled = true;
-            this.assetsMapFormat.Items.AddRange(new object[] {
-            "XML",
-            "JSON"});
-            this.assetsMapFormat.Location = new System.Drawing.Point(161, 215);
-            this.assetsMapFormat.Name = "assetsMapFormat";
-            this.assetsMapFormat.Size = new System.Drawing.Size(61, 21);
-            this.assetsMapFormat.TabIndex = 20;
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(95, 220);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(61, 13);
-            this.label8.TabIndex = 19;
-            this.label8.Text = "AM Format ";
-            // 
             // ExportOptions
             // 
             this.AcceptButton = this.OKbutton;
@@ -589,7 +536,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.Cancel;
             this.ClientSize = new System.Drawing.Size(486, 416);
-            this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.Cancel);
@@ -611,9 +557,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.scaleFactor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.boneSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.filterPrecision)).EndInit();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.key)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -653,14 +596,10 @@
         private System.Windows.Forms.CheckBox openAfterExport;
         private System.Windows.Forms.CheckBox exportAllUvsAsDiffuseMaps;
         private System.Windows.Forms.ToolTip exportUvsTooltip;
-        private System.Windows.Forms.CheckBox exportIndexObject;
         private System.Windows.Forms.CheckBox exportAssetBundle;
-        private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.NumericUpDown key;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.CheckBox enableXor;
         private System.Windows.Forms.CheckBox disableRndrr;
         private System.Windows.Forms.ComboBox assetsMapFormat;
         private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.CheckBox ignoreController;
     }
 }

@@ -24,7 +24,6 @@ namespace AssetStudio
         public PPtr<Material>[] m_Materials;
         public StaticBatchInfo m_StaticBatchInfo;
         public uint[] m_SubsetIndices;
-        public bool isNewHeader = false;
         protected Renderer(ObjectReader reader) : base(reader)
         {
             if (version[0] < 5) //5.0 down
@@ -38,31 +37,13 @@ namespace AssetStudio
             {
                 if (version[0] > 5 || (version[0] == 5 && version[1] >= 4)) //5.4 and up
                 {
-                    CheckHeader(reader);
                     var m_Enabled = reader.ReadBoolean();
                     var m_CastShadows = reader.ReadByte();
                     var m_ReceiveShadows = reader.ReadByte();
                     if (version[0] > 2017 || (version[0] == 2017 && version[1] >= 2)) //2017.2 and up
                     {
                         var m_DynamicOccludee = reader.ReadByte();
-                        var m_ReceiveDecals = reader.ReadByte();
-                        var m_EnableShadowCulling = reader.ReadByte();
-                        var m_EnableGpuQuery = reader.ReadByte();
                         var m_AllowHalfResolution = reader.ReadByte();
-                        var m_IsRainOccluder = reader.ReadByte();
-                        var m_IsDynamicAOOccluder = reader.ReadByte();
-                        var m_IsCloudObject = reader.ReadByte();
-                        var m_IsInteriorVolume = reader.ReadByte();
-                        var m_IsDynamic = reader.ReadByte();
-                        var m_UseTessellation = reader.ReadByte();
-                        var m_IsTerrainTessInfo = reader.ReadByte();
-                        if (isNewHeader)
-                        {
-                            var m_AllowPerMaterialProp = reader.ReadByte();
-                            var m_IsHQDynamicAOOccluder = reader.ReadByte();
-                            var m_UseVertexLightInForward = reader.ReadByte();
-                            var m_CombineSubMeshInGeoPass = reader.ReadByte();
-                        }
                     }
                     if (version[0] >= 2021) //2021.1 and up
                     {
@@ -79,7 +60,6 @@ namespace AssetStudio
                     {
                         var m_RayTraceProcedural = reader.ReadByte();
                     }
-                    var m_MeshShowQuality = reader.ReadByte();
                     reader.AlignStream();
                 }
                 else
@@ -117,8 +97,6 @@ namespace AssetStudio
                 var m_LightmapTilingOffsetDynamic = reader.ReadVector4();
             }
 
-            var m_ViewDistanceRatio = reader.ReadSingle();
-            var m_ShaderLODDistanceRatio = reader.ReadSingle();
             var m_MaterialsSize = reader.ReadInt32();
             m_Materials = new PPtr<Material>[m_MaterialsSize];
             for (int i = 0; i < m_MaterialsSize; i++)
@@ -143,7 +121,6 @@ namespace AssetStudio
 
                 var m_StaticBatchRoot = new PPtr<Transform>(reader);
             }
-            var m_MatLayers = reader.ReadInt32();
 
             if (version[0] > 5 || (version[0] == 5 && version[1] >= 4)) //5.4 and up
             {
@@ -181,16 +158,6 @@ namespace AssetStudio
                 var m_UseHighestMip = reader.ReadBoolean();
                 reader.AlignStream();
             }
-        }
-
-        private void CheckHeader(ObjectReader reader)
-        {
-            short index = 0;
-            var pos = reader.Position;
-            while (index != -1 && reader.Position <= pos + 0x1A)
-                index = reader.ReadInt16();
-            isNewHeader = (reader.Position - pos) == 0x1A;
-            reader.Position = pos;
         }
     }
 }

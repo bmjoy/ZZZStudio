@@ -10,37 +10,29 @@ namespace AssetStudio
 {
     public static class ShaderConverter
     {
-        public static byte[] Convert(this Shader shader)
+        public static string Convert(this Shader shader)
         {
-            using(var ms = new MemoryStream())
-            using(TextWriter writer = new StreamWriter(ms))
+            if (shader.m_SubProgramBlob != null) //5.3 - 5.4
             {
-                writer.Write(header);
-                if (shader.m_SubProgramBlob != null) //5.3 - 5.4
+                var decompressedBytes = new byte[shader.decompressedSize];
+                LZ4Codec.Decode(shader.m_SubProgramBlob, decompressedBytes);
+                using (var blobReader = new BinaryReader(new MemoryStream(decompressedBytes)))
                 {
-                    var decompressedBytes = new byte[shader.decompressedSize];
-                    LZ4Codec.Decode(shader.m_SubProgramBlob, decompressedBytes);
-                    using (var blobReader = new EndianBinaryReader(new MemoryStream(decompressedBytes), EndianType.LittleEndian))
-                    {
-                        var program = new ShaderProgram(blobReader, shader.version);
-                        program.Read(blobReader, 0);
-                        writer.Write(program.Export(Encoding.UTF8.GetString(shader.m_Script)));
-                        return ms.ToArray();
-                    }
+                    var program = new ShaderProgram(blobReader, shader.version);
+                    program.Read(blobReader, 0);
+                    return header + program.Export(Encoding.UTF8.GetString(shader.m_Script));
                 }
-
-                if (shader.compressedBlob != null) //5.5 and up
-                {
-                    ConvertSerializedShader(shader, writer);
-                    return ms.ToArray();
-                }
-
-                writer.Write(Encoding.UTF8.GetString(shader.m_Script));
-                return ms.ToArray();
             }
+
+            if (shader.compressedBlob != null) //5.5 and up
+            {
+                return header + ConvertSerializedShader(shader);
+            }
+
+            return header + Encoding.UTF8.GetString(shader.m_Script);
         }
 
-        private static void ConvertSerializedShader(Shader shader, TextWriter writer)
+        private static string ConvertSerializedShader(Shader shader)
         {
             var length = shader.platforms.Length;
             var shaderPrograms = new ShaderProgram[length];
@@ -49,10 +41,11 @@ namespace AssetStudio
                 for (var j = 0; j < shader.offsets[i].Length; j++)
                 {
                     var offset = shader.offsets[i][j];
+                    var compressedLength = shader.compressedLengths[i][j];
                     var decompressedLength = shader.decompressedLengths[i][j];
                     var decompressedBytes = new byte[decompressedLength];
-                    Buffer.BlockCopy(shader.compressedBlob, (int)offset, decompressedBytes, 0, (int)decompressedLength);
-                    using (var blobReader = new EndianBinaryReader(new MemoryStream(decompressedBytes), EndianType.LittleEndian))
+                    LZ4Codec.Decode(shader.compressedBlob, (int)offset, (int)compressedLength, decompressedBytes, 0, (int)decompressedLength);
+                    using (var blobReader = new BinaryReader(new MemoryStream(decompressedBytes)))
                     {
                         if (j == 0)
                         {
@@ -63,131 +56,138 @@ namespace AssetStudio
                 }
             }
 
-            ConvertSerializedShader(shader.m_ParsedForm, shader.platforms, shaderPrograms, writer);
+            return ConvertSerializedShader(shader.m_ParsedForm, shader.platforms, shaderPrograms);
         }
 
-        private static void ConvertSerializedShader(SerializedShader m_ParsedForm, ShaderCompilerPlatform[] platforms, ShaderProgram[] shaderPrograms, TextWriter writer)
+        private static string ConvertSerializedShader(SerializedShader m_ParsedForm, ShaderCompilerPlatform[] platforms, ShaderProgram[] shaderPrograms)
         {
-            writer.Write($"Shader \"{m_ParsedForm.m_Name}\" {{\n");
+            var sb = new StringBuilder();
+            sb.Append($"Shader \"{m_ParsedForm.m_Name}\" {{\n");
 
-            ConvertSerializedProperties(m_ParsedForm.m_PropInfo, writer);
+            sb.Append(ConvertSerializedProperties(m_ParsedForm.m_PropInfo));
 
             foreach (var m_SubShader in m_ParsedForm.m_SubShaders)
             {
-                ConvertSerializedSubShader(m_SubShader, platforms, shaderPrograms, writer);
+                sb.Append(ConvertSerializedSubShader(m_SubShader, platforms, shaderPrograms));
             }
 
             if (!string.IsNullOrEmpty(m_ParsedForm.m_FallbackName))
             {
-                writer.Write($"Fallback \"{m_ParsedForm.m_FallbackName}\"\n");
+                sb.Append($"Fallback \"{m_ParsedForm.m_FallbackName}\"\n");
             }
 
             if (!string.IsNullOrEmpty(m_ParsedForm.m_CustomEditorName))
             {
-                writer.Write($"CustomEditor \"{m_ParsedForm.m_CustomEditorName}\"\n");
+                sb.Append($"CustomEditor \"{m_ParsedForm.m_CustomEditorName}\"\n");
             }
 
-            writer.Write("}");
+            sb.Append("}");
+            return sb.ToString();
         }
 
-        private static void ConvertSerializedSubShader(SerializedSubShader m_SubShader, ShaderCompilerPlatform[] platforms, ShaderProgram[] shaderPrograms, TextWriter writer)
+        private static string ConvertSerializedSubShader(SerializedSubShader m_SubShader, ShaderCompilerPlatform[] platforms, ShaderProgram[] shaderPrograms)
         {
-            writer.Write("SubShader {\n");
+            var sb = new StringBuilder();
+            sb.Append("SubShader {\n");
             if (m_SubShader.m_LOD != 0)
             {
-                writer.Write($" LOD {m_SubShader.m_LOD}\n");
+                sb.Append($" LOD {m_SubShader.m_LOD}\n");
             }
 
-            ConvertSerializedTagMap(m_SubShader.m_Tags, 1, writer);
+            sb.Append(ConvertSerializedTagMap(m_SubShader.m_Tags, 1));
 
             foreach (var m_Passe in m_SubShader.m_Passes)
             {
-                ConvertSerializedPass(m_Passe, platforms, shaderPrograms, writer);
+                sb.Append(ConvertSerializedPass(m_Passe, platforms, shaderPrograms));
             }
-            writer.Write("}\n");
+            sb.Append("}\n");
+            return sb.ToString();
         }
 
-        private static void ConvertSerializedPass(SerializedPass m_Passe, ShaderCompilerPlatform[] platforms, ShaderProgram[] shaderPrograms, TextWriter writer)
+        private static string ConvertSerializedPass(SerializedPass m_Passe, ShaderCompilerPlatform[] platforms, ShaderProgram[] shaderPrograms)
         {
+            var sb = new StringBuilder();
             switch (m_Passe.m_Type)
             {
                 case PassType.Normal:
-                    writer.Write(" Pass ");
+                    sb.Append(" Pass ");
                     break;
                 case PassType.Use:
-                    writer.Write(" UsePass ");
+                    sb.Append(" UsePass ");
                     break;
                 case PassType.Grab:
-                    writer.Write(" GrabPass ");
+                    sb.Append(" GrabPass ");
                     break;
             }
             if (m_Passe.m_Type == PassType.Use)
             {
-                writer.Write($"\"{m_Passe.m_UseName}\"\n");
+                sb.Append($"\"{m_Passe.m_UseName}\"\n");
             }
             else
             {
-                writer.Write("{\n");
+                sb.Append("{\n");
 
                 if (m_Passe.m_Type == PassType.Grab)
                 {
                     if (!string.IsNullOrEmpty(m_Passe.m_TextureName))
                     {
-                        writer.Write($"  \"{m_Passe.m_TextureName}\"\n");
+                        sb.Append($"  \"{m_Passe.m_TextureName}\"\n");
                     }
                 }
                 else
                 {
-                    ConvertSerializedShaderState(m_Passe.m_State, writer);
+                    sb.Append(ConvertSerializedShaderState(m_Passe.m_State));
 
                     if (m_Passe.progVertex.m_SubPrograms.Length > 0)
                     {
-                        writer.Write("Program \"vp\" {\n");
-                        ConvertSerializedSubPrograms(m_Passe.progVertex.m_SubPrograms, platforms, shaderPrograms, writer);
-                        writer.Write("}\n");
+                        sb.Append("Program \"vp\" {\n");
+                        sb.Append(ConvertSerializedSubPrograms(m_Passe.progVertex.m_SubPrograms, platforms, shaderPrograms));
+                        sb.Append("}\n");
                     }
 
                     if (m_Passe.progFragment.m_SubPrograms.Length > 0)
                     {
-                        writer.Write("Program \"fp\" {\n");
-                        ConvertSerializedSubPrograms(m_Passe.progFragment.m_SubPrograms, platforms, shaderPrograms, writer);
-                        writer.Write("}\n");
+                        sb.Append("Program \"fp\" {\n");
+                        sb.Append(ConvertSerializedSubPrograms(m_Passe.progFragment.m_SubPrograms, platforms, shaderPrograms));
+                        sb.Append("}\n");
                     }
 
                     if (m_Passe.progGeometry.m_SubPrograms.Length > 0)
                     {
-                        writer.Write("Program \"gp\" {\n");
-                        ConvertSerializedSubPrograms(m_Passe.progGeometry.m_SubPrograms, platforms, shaderPrograms, writer);
-                        writer.Write("}\n");
+                        sb.Append("Program \"gp\" {\n");
+                        sb.Append(ConvertSerializedSubPrograms(m_Passe.progGeometry.m_SubPrograms, platforms, shaderPrograms));
+                        sb.Append("}\n");
                     }
 
                     if (m_Passe.progHull.m_SubPrograms.Length > 0)
                     {
-                        writer.Write("Program \"hp\" {\n");
-                        ConvertSerializedSubPrograms(m_Passe.progHull.m_SubPrograms, platforms, shaderPrograms, writer);
-                        writer.Write("}\n");
+                        sb.Append("Program \"hp\" {\n");
+                        sb.Append(ConvertSerializedSubPrograms(m_Passe.progHull.m_SubPrograms, platforms, shaderPrograms));
+                        sb.Append("}\n");
                     }
 
                     if (m_Passe.progDomain.m_SubPrograms.Length > 0)
                     {
-                        writer.Write("Program \"dp\" {\n");
-                        ConvertSerializedSubPrograms(m_Passe.progDomain.m_SubPrograms, platforms, shaderPrograms, writer);
-                        writer.Write("}\n");
+                        sb.Append("Program \"dp\" {\n");
+                        sb.Append(ConvertSerializedSubPrograms(m_Passe.progDomain.m_SubPrograms, platforms, shaderPrograms));
+                        sb.Append("}\n");
                     }
 
                     if (m_Passe.progRayTracing?.m_SubPrograms.Length > 0)
                     {
-                        writer.Write("Program \"rtp\" {\n");
-                        ConvertSerializedSubPrograms(m_Passe.progRayTracing.m_SubPrograms, platforms, shaderPrograms, writer);
-                        writer.Write("}\n");
+                        sb.Append("Program \"rtp\" {\n");
+                        sb.Append(ConvertSerializedSubPrograms(m_Passe.progRayTracing.m_SubPrograms, platforms, shaderPrograms));
+                        sb.Append("}\n");
                     }
                 }
-                writer.Write("}\n");
+                sb.Append("}\n");
             }
+            return sb.ToString();
         }
 
-        private static void ConvertSerializedSubPrograms(SerializedSubProgram[] m_SubPrograms, ShaderCompilerPlatform[] platforms, ShaderProgram[] shaderPrograms, TextWriter writer)
+        private static string ConvertSerializedSubPrograms(SerializedSubProgram[] m_SubPrograms, ShaderCompilerPlatform[] platforms, ShaderProgram[] shaderPrograms)
         {
+            var sb = new StringBuilder();
             var groups = m_SubPrograms.GroupBy(x => x.m_BlobIndex);
             foreach (var group in groups)
             {
@@ -203,104 +203,106 @@ namespace AssetStudio
                             var isTier = subPrograms.Count > 1;
                             foreach (var subProgram in subPrograms)
                             {
-                                writer.Write($"SubProgram \"{GetPlatformString(platform)} ");
+                                sb.Append($"SubProgram \"{GetPlatformString(platform)} ");
                                 if (isTier)
                                 {
-                                    writer.Write($"hw_tier{subProgram.m_ShaderHardwareTier:00} ");
+                                    sb.Append($"hw_tier{subProgram.m_ShaderHardwareTier:00} ");
                                 }
-                                writer.Write("\" {\n");
-                                writer.Write(shaderPrograms[i].m_SubPrograms[subProgram.m_BlobIndex].Export());
-                                writer.Write("\n}\n");
+                                sb.Append("\" {\n");
+                                sb.Append(shaderPrograms[i].m_SubPrograms[subProgram.m_BlobIndex].Export());
+                                sb.Append("\n}\n");
                             }
                             break;
                         }
                     }
                 }
             }
+            return sb.ToString();
         }
 
-        private static void ConvertSerializedShaderState(SerializedShaderState m_State, TextWriter writer)
+        private static string ConvertSerializedShaderState(SerializedShaderState m_State)
         {
+            var sb = new StringBuilder();
             if (!string.IsNullOrEmpty(m_State.m_Name))
             {
-                writer.Write($"  Name \"{m_State.m_Name}\"\n");
+                sb.Append($"  Name \"{m_State.m_Name}\"\n");
             }
             if (m_State.m_LOD != 0)
             {
-                writer.Write($"  LOD {m_State.m_LOD}\n");
+                sb.Append($"  LOD {m_State.m_LOD}\n");
             }
 
-            ConvertSerializedTagMap(m_State.m_Tags, 2, writer);
+            sb.Append(ConvertSerializedTagMap(m_State.m_Tags, 2));
 
-            ConvertSerializedShaderRTBlendState(m_State.rtBlend, m_State.rtSeparateBlend, writer);
+            sb.Append(ConvertSerializedShaderRTBlendState(m_State.rtBlend, m_State.rtSeparateBlend));
 
             if (m_State.alphaToMask.val > 0f)
             {
-                writer.Write("  AlphaToMask On\n");
+                sb.Append("  AlphaToMask On\n");
             }
 
             if (m_State.zClip?.val != 1f) //ZClip On
             {
-                writer.Write("  ZClip Off\n");
+                sb.Append("  ZClip Off\n");
             }
 
             if (m_State.zTest.val != 4f) //ZTest LEqual
             {
-                writer.Write("  ZTest ");
+                sb.Append("  ZTest ");
                 switch (m_State.zTest.val) //enum CompareFunction
                 {
                     case 0f: //kFuncDisabled
-                        writer.Write("Off");
+                        sb.Append("Off");
                         break;
                     case 1f: //kFuncNever
-                        writer.Write("Never");
+                        sb.Append("Never");
                         break;
                     case 2f: //kFuncLess
-                        writer.Write("Less");
+                        sb.Append("Less");
                         break;
                     case 3f: //kFuncEqual
-                        writer.Write("Equal");
+                        sb.Append("Equal");
                         break;
                     case 5f: //kFuncGreater
-                        writer.Write("Greater");
+                        sb.Append("Greater");
                         break;
                     case 6f: //kFuncNotEqual
-                        writer.Write("NotEqual");
+                        sb.Append("NotEqual");
                         break;
                     case 7f: //kFuncGEqual
-                        writer.Write("GEqual");
+                        sb.Append("GEqual");
                         break;
                     case 8f: //kFuncAlways
-                        writer.Write("Always");
+                        sb.Append("Always");
                         break;
                 }
 
-                writer.Write("\n");
+                sb.Append("\n");
             }
 
             if (m_State.zWrite.val != 1f) //ZWrite On
             {
-                writer.Write("  ZWrite Off\n");
+                sb.Append("  ZWrite Off\n");
             }
 
             if (m_State.culling.val != 2f) //Cull Back
             {
-                writer.Write("  Cull ");
+                sb.Append("  Cull ");
                 switch (m_State.culling.val) //enum CullMode
                 {
                     case 0f: //kCullOff
-                        writer.Write("Off");
+                        sb.Append("Off");
                         break;
                     case 1f: //kCullFront
-                        writer.Write("Front");
+                        sb.Append("Front");
                         break;
                 }
-                writer.Write("\n");
+                sb.Append("\n");
             }
 
             if (m_State.offsetFactor.val != 0f || m_State.offsetUnits.val != 0f)
             {
-                writer.Write($"  Offset {m_State.offsetFactor.val}, {m_State.offsetUnits.val}\n");
+                sb.Append($"  Offset {m_State.offsetFactor.val}, {m_State.offsetUnits.val}\n");
             }
 
             if (m_State.stencilRef.val != 0f ||
@@ -319,41 +321,41 @@ namespace AssetStudio
                 m_State.stencilOpBack.zFail.val != 0f ||
                 m_State.stencilOpBack.comp.val != 8f)
             {
-                writer.Write("  Stencil {\n");
+                sb.Append("  Stencil {\n");
                 if (m_State.stencilRef.val != 0f)
                 {
-                    writer.Write($"   Ref {m_State.stencilRef.val}\n");
+                    sb.Append($"   Ref {m_State.stencilRef.val}\n");
                 }
                 if (m_State.stencilReadMask.val != 255f)
                 {
-                    writer.Write($"   ReadMask {m_State.stencilReadMask.val}\n");
+                    sb.Append($"   ReadMask {m_State.stencilReadMask.val}\n");
                 }
                 if (m_State.stencilWriteMask.val != 255f)
                 {
-                    writer.Write($"   WriteMask {m_State.stencilWriteMask.val}\n");
+                    sb.Append($"   WriteMask {m_State.stencilWriteMask.val}\n");
                 }
                 if (m_State.stencilOp.pass.val != 0f ||
                     m_State.stencilOp.fail.val != 0f ||
                     m_State.stencilOp.zFail.val != 0f ||
                     m_State.stencilOp.comp.val != 8f)
                 {
-                    writer.Write(ConvertSerializedStencilOp(m_State.stencilOp, ""));
+                    sb.Append(ConvertSerializedStencilOp(m_State.stencilOp, ""));
                 }
                 if (m_State.stencilOpFront.pass.val != 0f ||
                     m_State.stencilOpFront.fail.val != 0f ||
                     m_State.stencilOpFront.zFail.val != 0f ||
                     m_State.stencilOpFront.comp.val != 8f)
                 {
-                    writer.Write(ConvertSerializedStencilOp(m_State.stencilOpFront, "Front"));
+                    sb.Append(ConvertSerializedStencilOp(m_State.stencilOpFront, "Front"));
                 }
                 if (m_State.stencilOpBack.pass.val != 0f ||
                     m_State.stencilOpBack.fail.val != 0f ||
                     m_State.stencilOpBack.zFail.val != 0f ||
                     m_State.stencilOpBack.comp.val != 8f)
                 {
-                    writer.Write(ConvertSerializedStencilOp(m_State.stencilOpBack, "Back"));
+                    sb.Append(ConvertSerializedStencilOp(m_State.stencilOpBack, "Back"));
                 }
-                writer.Write("  }\n");
+                sb.Append("  }\n");
             }
 
             if (m_State.fogMode != FogMode.Unknown ||
@@ -365,56 +367,58 @@ namespace AssetStudio
                 m_State.fogStart.val != 0f ||
                 m_State.fogEnd.val != 0f)
             {
-                writer.Write("  Fog {\n");
+                sb.Append("  Fog {\n");
                 if (m_State.fogMode != FogMode.Unknown)
                 {
-                    writer.Write("   Mode ");
+                    sb.Append("   Mode ");
                     switch (m_State.fogMode)
                     {
                         case FogMode.Disabled:
-                            writer.Write("Off");
+                            sb.Append("Off");
                             break;
                         case FogMode.Linear:
-                            writer.Write("Linear");
+                            sb.Append("Linear");
                             break;
                         case FogMode.Exp:
-                            writer.Write("Exp");
+                            sb.Append("Exp");
                             break;
                         case FogMode.Exp2:
-                            writer.Write("Exp2");
+                            sb.Append("Exp2");
                             break;
                     }
-                    writer.Write("\n");
+                    sb.Append("\n");
                 }
                 if (m_State.fogColor.x.val != 0f ||
                     m_State.fogColor.y.val != 0f ||
                     m_State.fogColor.z.val != 0f ||
                     m_State.fogColor.w.val != 0f)
                 {
-                    writer.Write(string.Format("   Color ({0},{1},{2},{3})\n",
+                    sb.AppendFormat("   Color ({0},{1},{2},{3})\n",
                         m_State.fogColor.x.val.ToString(CultureInfo.InvariantCulture),
                         m_State.fogColor.y.val.ToString(CultureInfo.InvariantCulture),
                         m_State.fogColor.z.val.ToString(CultureInfo.InvariantCulture),
-                        m_State.fogColor.w.val.ToString(CultureInfo.InvariantCulture)));
+                        m_State.fogColor.w.val.ToString(CultureInfo.InvariantCulture));
                 }
                 if (m_State.fogDensity.val != 0f)
                 {
-                    writer.Write($"   Density {m_State.fogDensity.val.ToString(CultureInfo.InvariantCulture)}\n");
+                    sb.Append($"   Density {m_State.fogDensity.val.ToString(CultureInfo.InvariantCulture)}\n");
                 }
                 if (m_State.fogStart.val != 0f ||
                     m_State.fogEnd.val != 0f)
                 {
-                    writer.Write($"   Range {m_State.fogStart.val.ToString(CultureInfo.InvariantCulture)}, {m_State.fogEnd.val.ToString(CultureInfo.InvariantCulture)}\n");
+                    sb.Append($"   Range {m_State.fogStart.val.ToString(CultureInfo.InvariantCulture)}, {m_State.fogEnd.val.ToString(CultureInfo.InvariantCulture)}\n");
                 }
-                writer.Write("  }\n");
+                sb.Append("  }\n");
             }
 
             if (m_State.lighting)
             {
-                writer.Write($"  Lighting {(m_State.lighting ? "On" : "Off")}\n");
+                sb.Append($"  Lighting {(m_State.lighting ? "On" : "Off")}\n");
             }
 
-            writer.Write($"  GpuProgramID {m_State.gpuProgramID}\n");
+            sb.Append($"  GpuProgramID {m_State.gpuProgramID}\n");
+
+            return sb.ToString();
         }
 
         private static string ConvertSerializedStencilOp(SerializedStencilOp stencilOp, string suffix)
@@ -477,8 +481,9 @@ namespace AssetStudio
             }
         }
 
-        private static void ConvertSerializedShaderRTBlendState(SerializedShaderRTBlendState[] rtBlend, bool rtSeparateBlend, TextWriter writer)
+        private static string ConvertSerializedShaderRTBlendState(SerializedShaderRTBlendState[] rtBlend, bool rtSeparateBlend)
         {
+            var sb = new StringBuilder();
             for (var i = 0; i < rtBlend.Length; i++)
             {
                 var blend = rtBlend[i];
@@ -487,66 +492,67 @@ namespace AssetStudio
                     blend.srcBlendAlpha.val != 1f ||
                     blend.destBlendAlpha.val != 0f)
                 {
-                    writer.Write("  Blend ");
+                    sb.Append("  Blend ");
                     if (i != 0 || rtSeparateBlend)
                     {
-                        writer.Write($"{i} ");
+                        sb.Append($"{i} ");
                     }
-                    writer.Write($"{ConvertBlendFactor(blend.srcBlend)} {ConvertBlendFactor(blend.destBlend)}");
+                    sb.Append($"{ConvertBlendFactor(blend.srcBlend)} {ConvertBlendFactor(blend.destBlend)}");
                     if (blend.srcBlendAlpha.val != 1f ||
                         blend.destBlendAlpha.val != 0f)
                     {
-                        writer.Write($", {ConvertBlendFactor(blend.srcBlendAlpha)} {ConvertBlendFactor(blend.destBlendAlpha)}");
+                        sb.Append($", {ConvertBlendFactor(blend.srcBlendAlpha)} {ConvertBlendFactor(blend.destBlendAlpha)}");
                     }
-                    writer.Write("\n");
+                    sb.Append("\n");
                 }
 
                 if (blend.blendOp.val != 0f ||
                     blend.blendOpAlpha.val != 0f)
                 {
-                    writer.Write("  BlendOp ");
+                    sb.Append("  BlendOp ");
                     if (i != 0 || rtSeparateBlend)
                     {
-                        writer.Write($"{i} ");
+                        sb.Append($"{i} ");
                     }
-                    writer.Write(ConvertBlendOp(blend.blendOp));
+                    sb.Append(ConvertBlendOp(blend.blendOp));
                     if (blend.blendOpAlpha.val != 0f)
                     {
-                        writer.Write($", {ConvertBlendOp(blend.blendOpAlpha)}");
+                        sb.Append($", {ConvertBlendOp(blend.blendOpAlpha)}");
                     }
-                    writer.Write("\n");
+                    sb.Append("\n");
                 }
 
                 var val = (int)blend.colMask.val;
                 if (val != 0xf)
                 {
-                    writer.Write("  ColorMask ");
+                    sb.Append("  ColorMask ");
                     if (val == 0)
                     {
-                        writer.Write(0);
+                        sb.Append(0);
                     }
                     else
                     {
                         if ((val & 0x2) != 0)
                         {
-                            writer.Write("R");
+                            sb.Append("R");
                         }
                         if ((val & 0x4) != 0)
                         {
-                            writer.Write("G");
+                            sb.Append("G");
                         }
                         if ((val & 0x8) != 0)
                         {
-                            writer.Write("B");
+                            sb.Append("B");
                         }
                         if ((val & 0x1) != 0)
                         {
-                            writer.Write("A");
+                            sb.Append("A");
                         }
                     }
-                    writer.Write($" {i}\n");
+                    sb.Append($" {i}\n");
                 }
             }
+            return sb.ToString();
         }
 
         private static string ConvertBlendOp(SerializedShaderFloatValue op)
@@ -629,94 +635,100 @@ namespace AssetStudio
             }
         }
 
-        private static void ConvertSerializedTagMap(SerializedTagMap m_Tags, int intent, TextWriter writer)
+        private static string ConvertSerializedTagMap(SerializedTagMap m_Tags, int intent)
         {
+            var sb = new StringBuilder();
             if (m_Tags.tags.Length > 0)
             {
-                writer.Write(new string(' ', intent));
-                writer.Write("Tags { ");
+                sb.Append(new string(' ', intent));
+                sb.Append("Tags { ");
                 foreach (var pair in m_Tags.tags)
                 {
-                    writer.Write($"\"{pair.Key}\" = \"{pair.Value}\" ");
+                    sb.Append($"\"{pair.Key}\" = \"{pair.Value}\" ");
                 }
-                writer.Write("}\n");
+                sb.Append("}\n");
             }
+            return sb.ToString();
         }
 
-        private static void ConvertSerializedProperties(SerializedProperties m_PropInfo, TextWriter writer)
+        private static string ConvertSerializedProperties(SerializedProperties m_PropInfo)
         {
-            writer.Write("Properties {\n");
+            var sb = new StringBuilder();
+            sb.Append("Properties {\n");
             foreach (var m_Prop in m_PropInfo.m_Props)
             {
-                ConvertSerializedProperty(m_Prop, writer);
+                sb.Append(ConvertSerializedProperty(m_Prop));
             }
-            writer.Write("}\n");
+            sb.Append("}\n");
+            return sb.ToString();
         }
 
-        private static void ConvertSerializedProperty(SerializedProperty m_Prop, TextWriter writer)
+        private static string ConvertSerializedProperty(SerializedProperty m_Prop)
         {
+            var sb = new StringBuilder();
             foreach (var m_Attribute in m_Prop.m_Attributes)
             {
-                writer.Write($"[{m_Attribute}] ");
+                sb.Append($"[{m_Attribute}] ");
             }
             //TODO Flag
-            writer.Write($"{m_Prop.m_Name} (\"{m_Prop.m_Description}\", ");
+            sb.Append($"{m_Prop.m_Name} (\"{m_Prop.m_Description}\", ");
             switch (m_Prop.m_Type)
             {
                 case SerializedPropertyType.Color:
-                    writer.Write("Color");
+                    sb.Append("Color");
                     break;
                 case SerializedPropertyType.Vector:
-                    writer.Write("Vector");
+                    sb.Append("Vector");
                     break;
                 case SerializedPropertyType.Float:
-                    writer.Write("Float");
+                    sb.Append("Float");
                     break;
                 case SerializedPropertyType.Range:
-                    writer.Write($"Range({m_Prop.m_DefValue[1]}, {m_Prop.m_DefValue[2]})");
+                    sb.Append($"Range({m_Prop.m_DefValue[1]}, {m_Prop.m_DefValue[2]})");
                     break;
                 case SerializedPropertyType.Texture:
                     switch (m_Prop.m_DefTexture.m_TexDim)
                     {
                         case TextureDimension.Any:
-                            writer.Write("any");
+                            sb.Append("any");
                             break;
                         case TextureDimension.Tex2D:
-                            writer.Write("2D");
+                            sb.Append("2D");
                             break;
                         case TextureDimension.Tex3D:
-                            writer.Write("3D");
+                            sb.Append("3D");
                             break;
                         case TextureDimension.Cube:
-                            writer.Write("Cube");
+                            sb.Append("Cube");
                             break;
                         case TextureDimension.Tex2DArray:
-                            writer.Write("2DArray");
+                            sb.Append("2DArray");
                             break;
                         case TextureDimension.CubeArray:
-                            writer.Write("CubeArray");
+                            sb.Append("CubeArray");
                             break;
                     }
                     break;
             }
-            writer.Write(") = ");
+            sb.Append(") = ");
             switch (m_Prop.m_Type)
             {
                 case SerializedPropertyType.Color:
                 case SerializedPropertyType.Vector:
-                    writer.Write($"({m_Prop.m_DefValue[0]},{m_Prop.m_DefValue[1]},{m_Prop.m_DefValue[2]},{m_Prop.m_DefValue[3]})");
+                    sb.Append($"({m_Prop.m_DefValue[0]},{m_Prop.m_DefValue[1]},{m_Prop.m_DefValue[2]},{m_Prop.m_DefValue[3]})");
                     break;
                 case SerializedPropertyType.Float:
                 case SerializedPropertyType.Range:
-                    writer.Write(m_Prop.m_DefValue[0]);
+                    sb.Append(m_Prop.m_DefValue[0]);
                     break;
                 case SerializedPropertyType.Texture:
-                    writer.Write($"\"{m_Prop.m_DefTexture.m_DefaultName}\" {{ }}");
+                    sb.Append($"\"{m_Prop.m_DefTexture.m_DefaultName}\" {{ }}");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            writer.Write("\n");
+            sb.Append("\n");
+            return sb.ToString();
         }
 
         private static bool CheckGpuProgramUsable(ShaderCompilerPlatform platform, ShaderGpuProgramType programType)
@@ -875,7 +887,7 @@ namespace AssetStudio
         public ShaderSubProgramEntry[] entries;
         public ShaderSubProgram[] m_SubPrograms;
 
-        public ShaderProgram(EndianBinaryReader reader, int[] version)
+        public ShaderProgram(BinaryReader reader, int[] version)
         {
             var subProgramsCapacity = reader.ReadInt32();
             entries = new ShaderSubProgramEntry[subProgramsCapacity];
@@ -884,6 +896,19 @@ namespace AssetStudio
                 entries[i] = new ShaderSubProgramEntry(reader, version);
             }
             m_SubPrograms = new ShaderSubProgram[subProgramsCapacity];
+        }
+
+        public void Read(BinaryReader reader, int segment)
+        {
+            for (int i = 0; i < entries.Length; i++)
+            {
+                var entry = entries[i];
+                if (entry.Segment == segment)
+                {
+                    reader.BaseStream.Position = entry.Offset;
+                    m_SubPrograms[i] = new ShaderSubProgram(reader);
+                }
+            }
         }
 
         public string Export(string shader)
@@ -896,18 +921,6 @@ namespace AssetStudio
             shader = Regex.Replace(shader, "GpuProgramIndex (.+)", evaluator);
             return shader;
         }
-        public void Read(EndianBinaryReader reader, int segment)
-        {
-            for (int i = 0; i < entries.Length; i++)
-            {
-                var entry = entries[i];
-                if (entry.Segment == segment)
-                {
-                    reader.BaseStream.Position = entry.Offset;
-                    m_SubPrograms[i] = new ShaderSubProgram(reader);
-                }
-            }
-        }
     }
 
     public class ShaderSubProgram
@@ -918,7 +931,7 @@ namespace AssetStudio
         public string[] m_LocalKeywords;
         public byte[] m_ProgramCode;
 
-        public ShaderSubProgram(EndianBinaryReader reader)
+        public ShaderSubProgram(BinaryReader reader)
         {
             //LoadGpuProgramFromData
             //201509030 - Unity 5.3

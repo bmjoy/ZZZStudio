@@ -984,15 +984,13 @@ namespace AssetStudio
                     decompressedLengths = reader.ReadUInt32Array().Select(x => new[] { x }).ToArray();
                 }
                 compressedBlob = reader.ReadUInt8Array();
-                if (BitConverter.ToInt32(compressedBlob, 0) == -1)
-                    compressedBlob = reader.ReadUInt8Array();
-                
+
                 var m_DependenciesCount = reader.ReadInt32();
                 for (int i = 0; i < m_DependenciesCount; i++)
                 {
                     new PPtr<Shader>(reader);
                 }
-                
+
                 if (version[0] >= 2018)
                 {
                     var m_NonModifiableTexturesCount = reader.ReadInt32();
@@ -1002,7 +1000,7 @@ namespace AssetStudio
                         new PPtr<Texture>(reader);
                     }
                 }
-                
+
                 var m_ShaderIsBaked = reader.ReadBoolean();
                 reader.AlignStream();
             }

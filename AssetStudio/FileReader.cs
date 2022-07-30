@@ -43,8 +43,6 @@ namespace AssetStudio
                 case "UnityArchive":
                 case "UnityFS":
                     return FileType.BundleFile;
-                case "blk":
-                    return FileType.BlkFile;
                 case "UnityWebData1.0":
                     return FileType.WebFile;
                 default:

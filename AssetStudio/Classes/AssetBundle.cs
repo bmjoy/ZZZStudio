@@ -27,25 +27,11 @@ namespace AssetStudio
         [JsonProperty]
         public KeyValuePair<string, AssetInfo>[] Container;
         [JsonProperty]
-        public AssetInfo MainAsset;
-        [JsonProperty]
-        public uint RuntimeComaptability;
-        [JsonProperty]
         public string AssetBundleName;
         [JsonProperty]
         public int DependencyCount;
         [JsonProperty]
         public string[] Dependencies;
-        [JsonProperty]
-        public bool IsStreamedScenessetBundle;
-        [JsonProperty]
-        public int ExplicitDataLayout;
-        [JsonProperty]
-        public int PathFlags;
-        [JsonProperty]
-        public int SceneHashCount;
-        [JsonProperty]
-        public KeyValuePair<string, string>[] SceneHashes;
 
         public AssetBundle(ObjectReader reader) : base(reader)
         {
@@ -63,25 +49,12 @@ namespace AssetStudio
                 Container[i] = new KeyValuePair<string, AssetInfo>(reader.ReadAlignedString(), new AssetInfo(reader));
             }
 
-            MainAsset = new AssetInfo(reader);
-            RuntimeComaptability = reader.ReadUInt32();
             AssetBundleName = reader.ReadAlignedString();
             DependencyCount = reader.ReadInt32();
             Dependencies = new string[DependencyCount];
             for (int k = 0; k < DependencyCount; k++)
             {
                 Dependencies[k] = reader.ReadAlignedString();
-            }
-            reader.AlignStream();
-            IsStreamedScenessetBundle = reader.ReadBoolean();
-            reader.AlignStream();
-            ExplicitDataLayout = reader.ReadInt32();
-            PathFlags = reader.ReadInt32();
-            SceneHashCount = reader.ReadInt32();
-            SceneHashes = new KeyValuePair<string, string>[SceneHashCount];
-            for (int l = 0; l < SceneHashCount; l++)
-            {
-                SceneHashes[l] = new KeyValuePair<string, string>(reader.ReadAlignedString(), reader.ReadAlignedString());
             }
         }
     }

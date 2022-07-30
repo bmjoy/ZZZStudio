@@ -28,9 +28,7 @@ namespace AssetStudio
                 || classID == (int)ClassIDType.Animator
                 || classID == (int)ClassIDType.Font
                 || (classID == (int)ClassIDType.AssetBundle && AssetBundle.Exportable)
-                || classID == (int)ClassIDType.Sprite
-                || (classID == (int)ClassIDType.MiHoYoBinData && IndexObject.Exportable)
-                || (classID == (int)ClassIDType.IndexObject && IndexObject.Exportable);
+                || classID == (int)ClassIDType.Sprite;
         }
     }
 }

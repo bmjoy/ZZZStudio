@@ -43,8 +43,6 @@
             this.displayInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem14 = new System.Windows.Forms.ToolStripMenuItem();
             this.specifyUnityVersion = new System.Windows.Forms.ToolStripTextBox();
-            this.toolStripMenuItem16 = new System.Windows.Forms.ToolStripMenuItem();
-            this.specifyAIVersion = new System.Windows.Forms.ToolStripComboBox();
             this.showExpOpt = new System.Windows.Forms.ToolStripMenuItem();
             this.modelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportAllObjectssplitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -80,7 +78,7 @@
             this.exportClassStructuresMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.console = new System.Windows.Forms.ToolStripMenuItem();
             this.miscToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.buildBLKMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buildWMVMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buildAssetMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -221,7 +219,6 @@
             this.enablePreview,
             this.displayInfo,
             this.toolStripMenuItem14,
-            this.toolStripMenuItem16,
             this.showExpOpt});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
@@ -274,24 +271,6 @@
             this.specifyUnityVersion.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
             this.specifyUnityVersion.Name = "specifyUnityVersion";
             this.specifyUnityVersion.Size = new System.Drawing.Size(100, 23);
-            // 
-            // toolStripMenuItem16
-            // 
-            this.toolStripMenuItem16.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.specifyAIVersion});
-            this.toolStripMenuItem16.Name = "toolStripMenuItem16";
-            this.toolStripMenuItem16.Size = new System.Drawing.Size(207, 22);
-            this.toolStripMenuItem16.Text = "Specify AI version";
-            // 
-            // specifyAIVersion
-            // 
-            this.specifyAIVersion.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.specifyAIVersion.Items.AddRange(new object[] {
-            "None"});
-            this.specifyAIVersion.Name = "specifyAIVersion";
-            this.specifyAIVersion.Size = new System.Drawing.Size(121, 23);
-            this.specifyAIVersion.Text = "None";
-            this.specifyAIVersion.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBox1_SelectedIndexChanged);
             // 
             // showExpOpt
             // 
@@ -565,7 +544,7 @@
             // miscToolStripMenuItem
             // 
             this.miscToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.buildBLKMapToolStripMenuItem,
+            this.buildWMVMapToolStripMenuItem,
             this.buildAssetMapToolStripMenuItem});
             this.miscToolStripMenuItem.Name = "miscToolStripMenuItem";
             this.miscToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
@@ -573,10 +552,10 @@
             // 
             // buildBLKMapToolStripMenuItem
             // 
-            this.buildBLKMapToolStripMenuItem.Name = "buildBLKMapToolStripMenuItem";
-            this.buildBLKMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.buildBLKMapToolStripMenuItem.Text = "Build BLKMap";
-            this.buildBLKMapToolStripMenuItem.Click += new System.EventHandler(this.buildBLKMapToolStripMenuItem_Click);
+            this.buildWMVMapToolStripMenuItem.Name = "buildBLKMapToolStripMenuItem";
+            this.buildWMVMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.buildWMVMapToolStripMenuItem.Text = "Build WMVMap";
+            this.buildWMVMapToolStripMenuItem.Click += new System.EventHandler(this.buildWMVMapToolStripMenuItem_Click);
             // 
             // buildAssetMapToolStripMenuItem
             // 
@@ -1271,10 +1250,8 @@
         private System.Windows.Forms.ToolStripTextBox specifyUnityVersion;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem15;
         private System.Windows.Forms.ToolStripMenuItem miscToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem buildBLKMapToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem buildWMVMapToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem console;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem16;
-        private System.Windows.Forms.ToolStripComboBox specifyAIVersion;
         private System.Windows.Forms.ToolStripMenuItem buildAssetMapToolStripMenuItem;
     }
 }

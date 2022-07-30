@@ -120,7 +120,7 @@ namespace AssetStudioGUI
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             InitializeComponent();
-            Text = $"GenshinStudio v{Application.ProductVersion}";
+            Text = $"BH3Studio v{Application.ProductVersion}";
             delayTimer = new System.Timers.Timer(800);
             delayTimer.Elapsed += new ElapsedEventHandler(delayTimer_Elapsed);
             console.Checked = Properties.Settings.Default.console;
@@ -128,10 +128,7 @@ namespace AssetStudioGUI
             displayInfo.Checked = Properties.Settings.Default.displayInfo;
             enablePreview.Checked = Properties.Settings.Default.enablePreview;
             AssetBundle.Exportable = Properties.Settings.Default.exportAssetBundle;
-            IndexObject.Exportable = Properties.Settings.Default.exportIndexObject;
             Renderer.Parsable = !Properties.Settings.Default.disableRndrr;
-            MiHoYoBinData.doXOR = Properties.Settings.Default.enableXor;
-            MiHoYoBinData.Key = Properties.Settings.Default.key;
             AllocConsole();
             SetConsoleTitle("Debug Console");
             FMODinit();
@@ -150,8 +147,7 @@ namespace AssetStudioGUI
             }
             Progress.Default = new Progress<int>(SetProgressBarValue);
             Studio.StatusStripUpdate = StatusStripUpdate;
-            specifyAIVersion.Items.AddRange(AIVersionManager.GetVersions());
-            AsbManager.LoadBLKMap();
+            CABManager.LoadWMVMap();
         }
         ~AssetStudioGUIForm()
         {
@@ -258,11 +254,11 @@ namespace AssetStudioGUI
 
             if (!string.IsNullOrEmpty(productName))
             {
-                Text = $"GenshinStudio v{Application.ProductVersion} - {productName} - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"BH3Studio v{Application.ProductVersion} - {productName} - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
             else
             {
-                Text = $"GenshinStudio v{Application.ProductVersion} - Genshin Impact - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"BH3Studio v{Application.ProductVersion} - Honkai Impact 3 - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
 
             assetListView.VirtualListSize = visibleAssets.Count;
@@ -772,7 +768,7 @@ namespace AssetStudioGUI
                         PreviewAudioClip(assetItem, m_AudioClip);
                         break;
                     case Shader m_Shader:
-                        StatusStripUpdate("Only supported export.");
+                        PreviewShader(m_Shader);
                         break;
                     case TextAsset m_TextAsset:
                         PreviewTextAsset(m_TextAsset);
@@ -802,14 +798,6 @@ namespace AssetStudioGUI
                     case AssetBundle m_AssetBundle:
                         PreviewAssetBundle(m_AssetBundle);
                         StatusStripUpdate("Can be exported to JSON file.");
-                        break;
-                    case IndexObject m_IndexObject:
-                        PreviewIndexObject(m_IndexObject);
-                        StatusStripUpdate("Can be exported to JSON file.");
-                        break;
-                    case MiHoYoBinData m_MiHoYoBinData:
-                        PreviewMiHoYoBinData(m_MiHoYoBinData);
-                        StatusStripUpdate("Can be exported/previewed as JSON if data is a valid JSON (check XOR).");
                         break;
                     default:
                         var str = assetItem.Asset.Dump();
@@ -1011,11 +999,11 @@ namespace AssetStudioGUI
             FMODtimerLabel.Text = $"0:0.0 / {FMODlenms / 1000 / 60}:{FMODlenms / 1000 % 60}.{FMODlenms / 10 % 100}";
         }
 
-        //private void PreviewShader(Shader m_Shader)
-        //{
-        //    var strBytes = ShaderConverter.Convert(m_Shader);
-        //    PreviewText(strBytes.Length == 0 ? "Serialized Shader can't be read" : Encoding.UTF8.GetString(strBytes).Replace("\n", "\r\n"));
-        //}
+        private void PreviewShader(Shader m_Shader)
+        {
+            var str = ShaderConverter.Convert(m_Shader);
+            PreviewText(str == null ? "Serialized Shader can't be read" : str.Replace("\n", "\r\n"));
+        }
 
         private void PreviewTextAsset(TextAsset m_TextAsset)
         {
@@ -1040,16 +1028,6 @@ namespace AssetStudioGUI
         {
             var str = JsonConvert.SerializeObject(m_AssetBundle, Formatting.Indented);
             PreviewText(str);
-        }
-        private void PreviewIndexObject(IndexObject m_IndexObject)
-        {
-            var str = JsonConvert.SerializeObject(m_IndexObject, Formatting.Indented);
-            PreviewText(str);
-        }
-
-        private void PreviewMiHoYoBinData(MiHoYoBinData m_MiHoYoBinData)
-        {
-            PreviewText(m_MiHoYoBinData.Str);
         }
 
         private void PreviewFont(Font m_Font)
@@ -1310,7 +1288,7 @@ namespace AssetStudioGUI
 
         private void ResetForm()
         {
-            Text = $"GenshinStudio v{Application.ProductVersion}";
+            Text = $"BH3Studio v{Application.ProductVersion}";
             assetsManager.Clear();
             assemblyLoader.Clear();
             exportableAssets.Clear();
@@ -2142,28 +2120,28 @@ namespace AssetStudioGUI
             logger.ShowErrorMessage = toolStripMenuItem15.Checked;
         }
 
-        private async void buildBLKMapToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void buildWMVMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new OpenFolderDialog();
-            openFolderDialog.Title = "Select GenshinImpact/YuanShen_Data Folder";
+            openFolderDialog.Title = "Select BH3_Data Folder";
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
-                Logger.Info("scanning for BLK files");
-                var files = Directory.GetFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories).ToList();
-                Logger.Info(string.Format("found {0} BLK files", files.Count()));
-                await Task.Run(() => AsbManager.BuildBLKMap(files));
+                Logger.Info("scanning for WMV files");
+                var files = Directory.GetFiles(openFolderDialog.Folder, "*.wmv", SearchOption.AllDirectories).ToList();
+                Logger.Info(string.Format("found {0} WMV files", files.Count()));
+                await Task.Run(() => CABManager.BuildWMVMap(files));
             }
         }
 
         private async void buildAssetMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new OpenFolderDialog();
-            openFolderDialog.Title = "Select GenshinImpact/YuanShen_Data Folder";
+            openFolderDialog.Title = "Select BH3_Data Folder";
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
-                Logger.Info("scanning for BLK files");
-                var files = Directory.GetFiles(openFolderDialog.Folder, "*.blk", SearchOption.AllDirectories).ToList();
-                Logger.Info(string.Format("found {0} BLK files", files.Count()));
+                Logger.Info("scanning for WMV files");
+                var files = Directory.GetFiles(openFolderDialog.Folder, "*.wmv", SearchOption.AllDirectories).ToList();
+                Logger.Info(string.Format("found {0} WMV files", files.Count()));
                 
                 var saveFolderDialog = new OpenFolderDialog();
                 saveFolderDialog.InitialFolder = saveDirectoryBackup;
@@ -2176,46 +2154,6 @@ namespace AssetStudioGUI
                     var exportFormat = (ExportListType)Properties.Settings.Default.assetsMapFormat;
                     ExportAssetsMap(saveFolderDialog.Folder, toExportAssets, exportFormat);
                 }
-            }
-        }
-
-        private async void toolStripComboBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (specifyAIVersion.SelectedIndex == 0) return;
-            optionsToolStripMenuItem.DropDown.Visible = false;
-            string version = specifyAIVersion.SelectedItem.ToString();
-
-            Logger.Info($"Loading AI v{version}");
-            specifyAIVersion.Enabled = false;
-            var path = AIVersionManager.GetAIPath(version);
-            if (string.IsNullOrEmpty(path))
-            {
-                Logger.Warning("Invalid version, Aborting...");
-                specifyAIVersion.SelectedIndex = 0;
-                SpecifyAIVersionUpdate(true);
-                return;
-            }
-            var needDownload = await AIVersionManager.NeedDownload(version);
-            if (needDownload)
-            {
-                Logger.Info($"AI v{version} not found !");
-                var json = await AIVersionManager.DownloadAI(version);
-                
-                File.WriteAllText(path, json);
-            }
-            await Task.Run(() => ResourceIndex.FromFile(path));
-            SpecifyAIVersionUpdate(true);
-        }
-
-        private void SpecifyAIVersionUpdate(bool value)
-        {
-            if (InvokeRequired)
-            {
-                BeginInvoke(new Action(() => { specifyAIVersion.Enabled = true; }));
-            }
-            else
-            {
-                specifyAIVersion.Enabled = true;
             }
         }
 

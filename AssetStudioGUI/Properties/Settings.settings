@@ -65,13 +65,7 @@
     <Setting Name="exportAllUvsAsDiffuseMaps" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="key" Type="System.Byte" Scope="User">
-      <Value Profile="(Default)">147</Value>
-    </Setting>
     <Setting Name="console" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="eanbleXor" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="disableRndrr" Type="System.Boolean" Scope="User">
@@ -80,7 +74,7 @@
     <Setting Name="exportAssetBundle" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="exportIndexObject" Type="System.Boolean" Scope="User">
+    <Setting Name="ignoreController" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>

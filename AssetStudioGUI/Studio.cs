@@ -81,8 +81,6 @@ namespace AssetStudioGUI
                 extractedCount += ExtractBundleFile(reader, savePath);
             else if (reader.FileType == FileType.WebFile)
                 extractedCount += ExtractWebDataFile(reader, savePath);
-            else if (reader.FileType == FileType.BlkFile)
-                extractedCount += ExtractBlkFile(reader, savePath);
             else
                 reader.Dispose();
             return extractedCount;
@@ -110,23 +108,6 @@ namespace AssetStudioGUI
             {
                 var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
                 return ExtractStreamFile(extractPath, webFile.fileList);
-            }
-            return 0;
-        }
-
-        private static int ExtractBlkFile(FileReader reader, string savePath)
-        {
-            BlkFile blkFile;
-            StatusStripUpdate($"Decompressing {reader.FileName} ...");
-
-            using (reader)
-                blkFile = new BlkFile(reader);
-
-            var fileList = blkFile.Files.SelectMany(x => x.Value.FileList).ToList();
-            if (fileList.Count > 0)
-            {
-                var extractPath = Path.Combine(savePath, Path.GetFileNameWithoutExtension(reader.FileName));
-                return ExtractStreamFile(extractPath, fileList.ToArray());
             }
             return 0;
         }
@@ -165,15 +146,16 @@ namespace AssetStudioGUI
                 var file = files[i];
                 using (var reader = new FileReader(file))
                 {
-                    var blkFile = new BlkFile(reader);
-                    var fileList = blkFile.Files.SelectMany(x => x.Value.FileList).Where(x => !x.path.Contains(".resS")).ToList();
-                    foreach (var cab in fileList)
+                    var bundleFile = new BundleFile(reader);
+                    foreach (var cab in bundleFile.fileList)
                     {
+                        if (cab.fileName.Contains(".resS"))
+                            continue;
+
                         using (var cabReader = new FileReader(cab.stream))
                         {
                             var assetsFile = new SerializedFile(cabReader, null);
                             var objects = assetsFile.m_Objects.Where(x => x.HasExportableType()).ToArray();
-                            IndexObject indexObject = null;
                             foreach (var obj in objects)
                             {
                                 var objectReader = new ObjectReader(assetsFile.reader, assetsFile, obj);
@@ -201,17 +183,6 @@ namespace AssetStudioGUI
                                         PPtrLUT.Add((assets.Count, gameObjectPPtr.m_PathID));
                                         name = "AnimatorPlaceholder";
                                         break;
-                                    case ClassIDType.MiHoYoBinData:
-                                        if (indexObject.Names.TryGetValue(objectReader.m_PathID, out var binName))
-                                        {
-                                            var path = ResourceIndex.GetContainerFromBinName(reader.FileName, binName);
-                                            name = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : binName;
-                                        }
-                                        break;
-                                    case ClassIDType.IndexObject:
-                                        indexObject = new IndexObject(objectReader);
-                                        name = "IndexObject";
-                                        break;
                                     default:
                                         name = objectReader.ReadAlignedString();
                                         break;
@@ -222,13 +193,14 @@ namespace AssetStudioGUI
                                 }
                             }
                         }
+
                     }
                 }
-
+        
                 Logger.Info($"[{i + 1}/{files.Count}] Processed {Path.GetFileName(file)}");
                 Progress.Report(i + 1, files.Count);
             }
-
+        
             Logger.Info("Processing PPtr names");
             foreach (var pptr in PPtrLUT)
             {
@@ -330,53 +302,17 @@ namespace AssetStudioGUI
                                 var preloadEnd = preloadIndex + preloadSize;
                                 for (int k = preloadIndex; k < preloadEnd; k++)
                                 {
-                                    if (long.TryParse(m_Container.Key, out var containerValue))
-                                    {
-                                        var last = unchecked((uint)containerValue);
-                                        var path = ResourceIndex.GetBundlePath(last);
-                                        if (!string.IsNullOrEmpty(path))
-                                        {
-                                            containers.Add((m_AssetBundle.PreloadTable[k], path));
-                                            continue;
-                                        }
-                                    }
                                     containers.Add((m_AssetBundle.PreloadTable[k], m_Container.Key));
                                 }
                             }
                             assetItem.Text = m_AssetBundle.m_Name;
                             exportable = AssetBundle.Exportable;
                             break;
-                        case IndexObject m_IndexObject:
-                            assetItem.Text = "IndexObject";
-                            exportable = IndexObject.Exportable;
-                            break;
                         case ResourceManager m_ResourceManager:
                             foreach (var m_Container in m_ResourceManager.m_Container)
                             {
                                 containers.Add((m_Container.Value, m_Container.Key));
                             }
-                            break;
-                        case MiHoYoBinData m_MiHoYoBinData:
-                            if (m_MiHoYoBinData.assetsFile.ObjectsDic.TryGetValue(2, out var obj) && obj is IndexObject indexObject)
-                            {
-                                if (indexObject.Names.TryGetValue(m_MiHoYoBinData.m_PathID, out var binName))
-                                {
-                                    string path = "";
-                                    if (Path.GetExtension(assetsFile.originalPath) == ".blk")
-                                    {
-                                        path = ResourceIndex.GetContainerFromBinName(assetsFile.originalPath, binName);
-                                    }
-                                    else
-                                    {
-                                        var last = Convert.ToUInt32(binName, 16);
-                                        path = ResourceIndex.GetBundlePath(last) ?? "";
-                                    }
-                                    assetItem.Container = path;
-                                    assetItem.Text = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : binName;
-                                } 
-                            }
-                            else assetItem.Text = string.Format("BinFile #{0}", assetItem.m_PathID);
-                            exportable = true;
                             break;
                         case NamedObject m_NamedObject:
                             assetItem.Text = m_NamedObject.m_Name;

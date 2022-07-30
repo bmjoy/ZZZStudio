@@ -123,56 +123,10 @@ namespace AssetStudioCLI
                                 var preloadEnd = preloadIndex + preloadSize;
                                 for (int k = preloadIndex; k < preloadEnd; k++)
                                 {
-                                    if (long.TryParse(m_Container.Key, out var containerValue))
-                                    {
-                                        var last = unchecked((uint)containerValue);
-                                        var path = ResourceIndex.GetBundlePath(last);
-                                        if (!string.IsNullOrEmpty(path))
-                                        {
-                                            containers.Add((m_AssetBundle.PreloadTable[k], path));
-                                            continue;
-                                        }
-                                    }
                                     containers.Add((m_AssetBundle.PreloadTable[k], m_Container.Key));
                                 }
                             }
                             assetItem.Text = m_AssetBundle.m_Name;
-                            break;
-                        case IndexObject m_IndexObject:
-                            assetItem.Text = "IndexObject";
-                            break;
-                        case ResourceManager m_ResourceManager:
-                            foreach (var m_Container in m_ResourceManager.m_Container)
-                            {
-                                containers.Add((m_Container.Value, m_Container.Key));
-                            }
-                            break;
-                        case MiHoYoBinData m_MiHoYoBinData:
-                            if (m_MiHoYoBinData.assetsFile.ObjectsDic.TryGetValue(2, out var obj) && obj is IndexObject indexObject)
-                            {
-                                if (indexObject.Names.TryGetValue(m_MiHoYoBinData.m_PathID, out var binName))
-                                {
-                                    string path = "";
-                                    if (Path.GetExtension(assetsFile.originalPath) == ".blk")
-                                    {
-                                        var blkName = Path.GetFileNameWithoutExtension(assetsFile.originalPath);
-                                        var blk = Convert.ToUInt64(blkName);
-                                        var lastHex = uint.Parse(binName, NumberStyles.HexNumber);
-                                        var blkHash = (blk << 32) | lastHex;
-                                        var index = ResourceIndex.GetAssetIndex(blkHash);
-                                        var bundleInfo = ResourceIndex.GetBundleInfo(index);
-                                        path = bundleInfo != null ? bundleInfo.Path : "";
-                                    }
-                                    else
-                                    {
-                                        var last = uint.Parse(binName, NumberStyles.HexNumber);
-                                        path = ResourceIndex.GetBundlePath(last) ?? "";
-                                    }
-                                    assetItem.Container = path;
-                                    assetItem.Text = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : binName;
-                                }
-                            }
-                            else assetItem.Text = string.Format("BinFile #{0}", assetItem.m_PathID);
                             break;
                         case NamedObject m_NamedObject:
                             assetItem.Text = m_NamedObject.m_Name;

@@ -18,12 +18,12 @@ namespace AssetStudio
 
         private List<string> importFiles = new List<string>();
         private HashSet<string> importFilesHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private HashSet<string> noexistFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private HashSet<string> assetsFileListHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         public void LoadFiles(params string[] files)
         {
             var path = Path.GetDirectoryName(Path.GetFullPath(files[0]));
-            AsbManager.ProcessDependancies(ref files);
             MergeSplitAssets(path);
             var toReadFile = ProcessingSplitFiles(files.ToList());
             Load(toReadFile);
@@ -57,7 +57,7 @@ namespace AssetStudio
             importFiles.Clear();
             importFilesHash.Clear();
             assetsFileListHash.Clear();
-            AsbManager.offsets.Clear();
+            noexistFiles.Clear();
 
             ReadAssets();
             ProcessAssets();
@@ -78,9 +78,6 @@ namespace AssetStudio
                     break;
                 case FileType.BundleFile:
                     LoadBundleFile(reader);
-                    break;
-                case FileType.BlkFile:
-                    LoadBlkFile(reader);
                     break;
                 case FileType.WebFile:
                     LoadWebFile(reader);
@@ -137,6 +134,44 @@ namespace AssetStudio
                     CheckStrippedVersion(assetsFile);
                     assetsFileList.Add(assetsFile);
                     assetsFileListHash.Add(assetsFile.fileName);
+                    foreach (var sharedFile in assetsFile.m_Externals)
+                    {
+                        var sharedFileName = sharedFile.fileName;
+
+                        if (!importFilesHash.Contains(sharedFileName))
+                        {
+                            var sharedFilePath = Path.Combine(Path.GetDirectoryName(reader.FullPath), sharedFileName);
+                            if (!noexistFiles.Contains(sharedFilePath))
+                            {
+                                if (!File.Exists(sharedFilePath))
+                                {
+                                    var findFiles = Directory.GetFiles(Path.GetDirectoryName(reader.FullPath), sharedFileName, SearchOption.AllDirectories);
+                                    if (findFiles.Length > 0)
+                                    {
+                                        sharedFilePath = findFiles[0];
+                                    }
+                                }
+                                if (CABManager.WMVMap.TryGetValue(sharedFileName, out var entry))
+                                {
+                                    using (var subReader = new FileReader(entry.Path))
+                                    {
+                                        subReader.BundlePos = new long[1];
+                                        subReader.BundlePos[0] = entry.Offset;
+                                        LoadBundleFile(subReader, entry.Path);
+                                    }
+                                }
+                                if (File.Exists(sharedFilePath))
+                                {
+                                    importFiles.Add(sharedFilePath);
+                                    importFilesHash.Add(sharedFileName);
+                                }
+                                else
+                                {
+                                    noexistFiles.Add(sharedFilePath);
+                                }
+                            }
+                        }
+                    }
                 }
                 catch (Exception e)
                 {
@@ -320,44 +355,6 @@ namespace AssetStudio
             }
         }
 
-        private void LoadBlkFile(FileReader reader)
-        {
-            Logger.Info("Loading " + reader.FileName);
-            try
-            {
-                BlkFile blkFile;
-                reader.MHY0Pos = AsbManager.offsets.TryGetValue(reader.FullPath, out var list) ? list.ToArray() : Array.Empty<long>();
-                blkFile = new BlkFile(reader);
-                foreach (var mhy0 in blkFile.Files)
-                {
-                    foreach (var file in mhy0.Value.FileList)
-                    {
-                        var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
-                        var cabReader = new FileReader(dummyPath, file.stream);
-                        if (cabReader.FileType == FileType.AssetsFile)
-                        {
-                            var assetsFile = new SerializedFile(cabReader, this, reader.FullPath);
-                            CheckStrippedVersion(assetsFile);
-                            assetsFileList.Add(assetsFile);
-                            assetsFileListHash.Add(assetsFile.fileName);
-                        }
-                        else
-                        {
-                            resourceFileReaders[file.fileName] = cabReader; //TODO
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Error($"Error while reading blk file {reader.FileName}", e);
-            }
-            finally
-            {
-                reader.Dispose();
-            }
-        }
-
         public void CheckStrippedVersion(SerializedFile assetsFile)
         {
             if (assetsFile.IsVersionStripped && string.IsNullOrEmpty(SpecifyUnityVersion))
@@ -435,9 +432,6 @@ namespace AssetStudio
                             case ClassIDType.GameObject:
                                 obj = new GameObject(objectReader);
                                 break;
-                            case ClassIDType.IndexObject:
-                                obj = new IndexObject(objectReader);
-                                break;
                             case ClassIDType.Material:
                                 obj = new Material(objectReader);
                                 break;
@@ -450,9 +444,6 @@ namespace AssetStudio
                             case ClassIDType.MeshRenderer:
                                 if (!Renderer.Parsable) continue;
                                 obj = new MeshRenderer(objectReader);
-                                break;
-                            case ClassIDType.MiHoYoBinData:
-                                obj = new MiHoYoBinData(objectReader);
                                 break;
                             case ClassIDType.MonoBehaviour:
                                 obj = new MonoBehaviour(objectReader);

@@ -18,10 +18,10 @@ namespace AssetStudio
             for (int i = 0; i < a.Length; i++)
                 a[i] = LookupSBoxInv[a[i]];
         }
-        static void XorRoundKey(byte[] state, int round)
+        static void XorRoundKey(byte[] state, byte[] keys, int round)
         {
             for (int i = 0; i < 0x10; i++)
-                state[i] ^= Crypto.ExpansionKey[i + round * 0x10];
+                state[i] ^= keys[i + round * 0x10];
         }
         static void ShiftRowsInv(byte[] state)
         {
@@ -48,26 +48,24 @@ namespace AssetStudio
             MixColInv(state, 0x08);
             MixColInv(state, 0x0C);
         }
-        public static byte[] Decrypt(byte[] m)
+        public static void Decrypt(byte[] m, byte[] keys)
         {
-
             byte[] c = new byte[0x10];
             Array.Copy(m, c, 0x10);
-            XorRoundKey(c, 0);
+            XorRoundKey(c, keys, 0);
 
             for (int i = 0; i < 9; i++)
             {
                 SubBytesInv(c);
                 ShiftRowsInv(c);
                 MixColsInv(c);
-                XorRoundKey(c, i + 1);
+                XorRoundKey(c, keys, i + 1);
             }
 
             SubBytesInv(c);
             ShiftRowsInv(c);
-            XorRoundKey(c, 0xA);
-
-            return c;
+            XorRoundKey(c, keys, 0xA);
+            Array.Copy(c, m, 0x10);
         }
     }
 }
