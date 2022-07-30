@@ -1,7 +1,7 @@
-# BH3Studio
+# SRStudio
 Check out the [original AssetStudio project](https://github.com/Perfare/AssetStudio) for more information.
 
-This is the release of BH3Studio, Modded AssetStudio that should work with Honkai Impact 3.
+This is the release of SRStudio, Modded AssetStudio that should work with Honkai: Star Rail.
 _____________________________________________________________________________________________________________________________
 
 Some features are:
@@ -15,8 +15,8 @@ ________________________________________________________________________________
 How to use:
 
 ```
-1. Build WMV Map (Misc. -> Build WMVMap).
-2. Load WMV files.
+1. Build ENCR Map (Misc. -> Build ENCRMap).
+2. Load unity3d files.
 ```
 
 CLI Version:
