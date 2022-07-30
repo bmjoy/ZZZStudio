@@ -120,7 +120,7 @@ namespace AssetStudioGUI
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             InitializeComponent();
-            Text = $"BH3Studio v{Application.ProductVersion}";
+            Text = $"SRStudio v{Application.ProductVersion}";
             delayTimer = new System.Timers.Timer(800);
             delayTimer.Elapsed += new ElapsedEventHandler(delayTimer_Elapsed);
             console.Checked = Properties.Settings.Default.console;
@@ -147,7 +147,7 @@ namespace AssetStudioGUI
             }
             Progress.Default = new Progress<int>(SetProgressBarValue);
             Studio.StatusStripUpdate = StatusStripUpdate;
-            CABManager.LoadWMVMap();
+            CABManager.LoadENCRMap();
         }
         ~AssetStudioGUIForm()
         {
@@ -254,11 +254,11 @@ namespace AssetStudioGUI
 
             if (!string.IsNullOrEmpty(productName))
             {
-                Text = $"BH3Studio v{Application.ProductVersion} - {productName} - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"SRStudio v{Application.ProductVersion} - {productName} - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
             else
             {
-                Text = $"BH3Studio v{Application.ProductVersion} - Honkai Impact 3 - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"SRStudio v{Application.ProductVersion} - Honkai: Star Rail - {Path.GetFileName(assetsManager.assetsFileList[0].originalPath)} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
 
             assetListView.VirtualListSize = visibleAssets.Count;
@@ -1288,7 +1288,7 @@ namespace AssetStudioGUI
 
         private void ResetForm()
         {
-            Text = $"BH3Studio v{Application.ProductVersion}";
+            Text = $"SRStudio v{Application.ProductVersion}";
             assetsManager.Clear();
             assemblyLoader.Clear();
             exportableAssets.Clear();
@@ -2120,28 +2120,28 @@ namespace AssetStudioGUI
             logger.ShowErrorMessage = toolStripMenuItem15.Checked;
         }
 
-        private async void buildWMVMapToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void buildENCRMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new OpenFolderDialog();
-            openFolderDialog.Title = "Select BH3_Data Folder";
+            openFolderDialog.Title = "Select StarRail_Data Folder";
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
-                Logger.Info("scanning for WMV files");
-                var files = Directory.GetFiles(openFolderDialog.Folder, "*.wmv", SearchOption.AllDirectories).ToList();
-                Logger.Info(string.Format("found {0} WMV files", files.Count()));
-                await Task.Run(() => CABManager.BuildWMVMap(files));
+                Logger.Info("scanning for unity3d files");
+                var files = Directory.GetFiles(openFolderDialog.Folder, "*.unity3d", SearchOption.AllDirectories).ToList();
+                Logger.Info(string.Format("found {0} unity3d files", files.Count()));
+                await Task.Run(() => CABManager.BuildENCRMap(files));
             }
         }
 
         private async void buildAssetMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new OpenFolderDialog();
-            openFolderDialog.Title = "Select BH3_Data Folder";
+            openFolderDialog.Title = "Select StarRail_Data Folder";
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
-                Logger.Info("scanning for WMV files");
-                var files = Directory.GetFiles(openFolderDialog.Folder, "*.wmv", SearchOption.AllDirectories).ToList();
-                Logger.Info(string.Format("found {0} WMV files", files.Count()));
+                Logger.Info("scanning for unity3d files");
+                var files = Directory.GetFiles(openFolderDialog.Folder, "*.unity3d", SearchOption.AllDirectories).ToList();
+                Logger.Info(string.Format("found {0} unity3d files", files.Count()));
                 
                 var saveFolderDialog = new OpenFolderDialog();
                 saveFolderDialog.InitialFolder = saveDirectoryBackup;

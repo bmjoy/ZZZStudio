@@ -24,6 +24,7 @@ namespace AssetStudio
         public void LoadFiles(params string[] files)
         {
             var path = Path.GetDirectoryName(Path.GetFullPath(files[0]));
+            CABManager.ProcessDependancies(ref files);
             MergeSplitAssets(path);
             var toReadFile = ProcessingSplitFiles(files.ToList());
             Load(toReadFile);
@@ -134,44 +135,6 @@ namespace AssetStudio
                     CheckStrippedVersion(assetsFile);
                     assetsFileList.Add(assetsFile);
                     assetsFileListHash.Add(assetsFile.fileName);
-                    foreach (var sharedFile in assetsFile.m_Externals)
-                    {
-                        var sharedFileName = sharedFile.fileName;
-
-                        if (!importFilesHash.Contains(sharedFileName))
-                        {
-                            var sharedFilePath = Path.Combine(Path.GetDirectoryName(reader.FullPath), sharedFileName);
-                            if (!noexistFiles.Contains(sharedFilePath))
-                            {
-                                if (!File.Exists(sharedFilePath))
-                                {
-                                    var findFiles = Directory.GetFiles(Path.GetDirectoryName(reader.FullPath), sharedFileName, SearchOption.AllDirectories);
-                                    if (findFiles.Length > 0)
-                                    {
-                                        sharedFilePath = findFiles[0];
-                                    }
-                                }
-                                if (CABManager.WMVMap.TryGetValue(sharedFileName, out var entry))
-                                {
-                                    using (var subReader = new FileReader(entry.Path))
-                                    {
-                                        subReader.BundlePos = new long[1];
-                                        subReader.BundlePos[0] = entry.Offset;
-                                        LoadBundleFile(subReader, entry.Path);
-                                    }
-                                }
-                                if (File.Exists(sharedFilePath))
-                                {
-                                    importFiles.Add(sharedFilePath);
-                                    importFilesHash.Add(sharedFileName);
-                                }
-                                else
-                                {
-                                    noexistFiles.Add(sharedFilePath);
-                                }
-                            }
-                        }
-                    }
                 }
                 catch (Exception e)
                 {

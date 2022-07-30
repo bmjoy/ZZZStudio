@@ -71,14 +71,15 @@ namespace AssetStudio
 
     public class ACLClip
     {
-        public byte[] m_ClipData;
+        public uint[] m_ClipData;
 
         public uint m_CurveCount;
+        public uint m_ConstCurveCount;
         public ACLClip(ObjectReader reader)
         {
-            m_ClipData = reader.ReadUInt8Array();
-            reader.AlignStream();
+            m_ClipData = reader.ReadUInt32Array();
             m_CurveCount = reader.ReadUInt32();
+            m_ConstCurveCount = reader.ReadUInt32();
         }
     }
 
@@ -642,11 +643,11 @@ namespace AssetStudio
             var version = reader.version;
             m_StreamedClip = new StreamedClip(reader);
             m_DenseClip = new DenseClip(reader);
+            m_ACLClip = new ACLClip(reader);
             if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
             {
                 m_ConstantClip = new ConstantClip(reader);
             }
-            m_ACLClip = new ACLClip(reader);
             if (version[0] < 2018 || (version[0] == 2018 && version[1] < 3)) //2018.3 down
             {
                 m_Binding = new ValueArrayConstant(reader);
@@ -947,6 +948,9 @@ namespace AssetStudio
         public AABB m_Bounds;
         public uint m_MuscleClipSize;
         public ClipMuscleConstant m_MuscleClip;
+        public byte[] m_AclClipData;
+        public GenericBinding[] m_AclBindings;
+        public KeyValuePair<float, float> m_AclRange;
         public AnimationClipBindingConstant m_ClipBindingConstant;
         public AnimationEvent[] m_Events;
 
@@ -1041,6 +1045,14 @@ namespace AssetStudio
             }
             if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
             {
+                m_AclClipData = reader.ReadUInt8Array();
+                var aclBindingsCount = reader.ReadInt32();
+                m_AclBindings = new GenericBinding[aclBindingsCount];
+                for (int i = 0; i < aclBindingsCount; i++)
+                {
+                    m_AclBindings[i] = new GenericBinding(reader);
+                }
+                m_AclRange = new KeyValuePair<float, float>(reader.ReadSingle(), reader.ReadSingle());
                 m_ClipBindingConstant = new AnimationClipBindingConstant(reader);
             }
             if (version[0] > 2018 || (version[0] == 2018 && version[1] >= 3)) //2018.3 and up

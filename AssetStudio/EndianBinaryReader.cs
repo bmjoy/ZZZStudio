@@ -22,8 +22,6 @@ namespace AssetStudio
             set => BaseStream.Position = value;
         }
 
-        public long[] BundlePos = Array.Empty<long>();
-
         public override short ReadInt16()
         {
             if (Endian == EndianType.BigEndian)

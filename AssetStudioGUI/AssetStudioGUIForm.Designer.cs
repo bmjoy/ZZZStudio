@@ -78,7 +78,7 @@
             this.exportClassStructuresMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.console = new System.Windows.Forms.ToolStripMenuItem();
             this.miscToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.buildWMVMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buildENCRMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buildAssetMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -544,7 +544,7 @@
             // miscToolStripMenuItem
             // 
             this.miscToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.buildWMVMapToolStripMenuItem,
+            this.buildENCRMapToolStripMenuItem,
             this.buildAssetMapToolStripMenuItem});
             this.miscToolStripMenuItem.Name = "miscToolStripMenuItem";
             this.miscToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
@@ -552,10 +552,10 @@
             // 
             // buildBLKMapToolStripMenuItem
             // 
-            this.buildWMVMapToolStripMenuItem.Name = "buildBLKMapToolStripMenuItem";
-            this.buildWMVMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.buildWMVMapToolStripMenuItem.Text = "Build WMVMap";
-            this.buildWMVMapToolStripMenuItem.Click += new System.EventHandler(this.buildWMVMapToolStripMenuItem_Click);
+            this.buildENCRMapToolStripMenuItem.Name = "buildBLKMapToolStripMenuItem";
+            this.buildENCRMapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.buildENCRMapToolStripMenuItem.Text = "Build ENCRMap";
+            this.buildENCRMapToolStripMenuItem.Click += new System.EventHandler(this.buildENCRMapToolStripMenuItem_Click);
             // 
             // buildAssetMapToolStripMenuItem
             // 
@@ -1250,7 +1250,7 @@
         private System.Windows.Forms.ToolStripTextBox specifyUnityVersion;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem15;
         private System.Windows.Forms.ToolStripMenuItem miscToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem buildWMVMapToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem buildENCRMapToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem console;
         private System.Windows.Forms.ToolStripMenuItem buildAssetMapToolStripMenuItem;
     }

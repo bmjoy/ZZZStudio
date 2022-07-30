@@ -43,7 +43,6 @@ namespace AssetStudio
                     if (version[0] > 2017 || (version[0] == 2017 && version[1] >= 2)) //2017.2 and up
                     {
                         var m_DynamicOccludee = reader.ReadByte();
-                        var m_AllowHalfResolution = reader.ReadByte();
                     }
                     if (version[0] >= 2021) //2021.1 and up
                     {
@@ -154,8 +153,6 @@ namespace AssetStudio
 
                 //SInt16 m_SortingLayer 5.6 and up
                 var m_SortingOrder = reader.ReadInt16();
-                reader.AlignStream();
-                var m_UseHighestMip = reader.ReadBoolean();
                 reader.AlignStream();
             }
         }

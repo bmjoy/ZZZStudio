@@ -69,35 +69,16 @@ namespace AssetStudio
 
         public BundleFile(FileReader reader)
         {
-            var files = new List<StreamFile>();
-
-            if (reader.BundlePos.Length != 0)
-            {
-                foreach (var pos in reader.BundlePos)
-                {
-                    reader.Position = pos;
-                    files.AddRange(ReadBundle(reader));
-                }
-            }
-            else
-            {
-                while (reader.Position != reader.Length)
-                {
-                    files.AddRange(ReadBundle(reader));
-                }
-            }
-            
-            fileList = files.ToArray();
-        }
-
-        public List<StreamFile> ReadBundle(FileReader reader)
-        {
-            var files = new List<StreamFile>();
+            var readHeader = false;
             m_Header = new Header();
             m_Header.signature = reader.ReadStringToNull();
-            m_Header.version = 6;
-            m_Header.unityVersion = "2017.4.18f1";
-            m_Header.unityRevision = "5.x.x";
+            if (m_Header.signature != "ENCR")
+            {
+                readHeader = true;
+            }
+            m_Header.version = readHeader ? reader.ReadUInt32() : 7;
+            m_Header.unityVersion = readHeader ? reader.ReadStringToNull() : "5.x.x";
+            m_Header.unityRevision = readHeader ? reader.ReadStringToNull() : "2019.4.32f1";
             switch (m_Header.signature)
             {
                 case "UnityArchive":
@@ -112,20 +93,20 @@ namespace AssetStudio
                     using (var blocksStream = CreateBlocksStream(reader.FullPath))
                     {
                         ReadBlocksAndDirectory(reader, blocksStream);
-                        files.AddRange(ReadFiles(blocksStream, reader.FullPath));
+                        ReadFiles(blocksStream, reader.FullPath);
                     }
                     break;
                 case "UnityFS":
+                case "ENCR":
                     ReadHeader(reader);
                     ReadBlocksInfoAndDirectory(reader);
                     using (var blocksStream = CreateBlocksStream(reader.FullPath))
                     {
                         ReadBlocks(reader, blocksStream);
-                        files.AddRange(ReadFiles(blocksStream, reader.FullPath));
+                        ReadFiles(blocksStream, reader.FullPath);
                     }
                     break;
             }
-            return files;
         }
 
         private void ReadHeaderAndBlocksInfo(EndianBinaryReader reader)
@@ -213,9 +194,9 @@ namespace AssetStudio
             }
         }
 
-        public StreamFile[] ReadFiles(Stream blocksStream, string path)
+        public void ReadFiles(Stream blocksStream, string path)
         {
-            var fileList = new StreamFile[m_DirectoryInfo.Length];
+            fileList = new StreamFile[m_DirectoryInfo.Length];
             for (int i = 0; i < m_DirectoryInfo.Length; i++)
             {
                 var node = m_DirectoryInfo[i];
@@ -239,41 +220,19 @@ namespace AssetStudio
                 blocksStream.CopyTo(file.stream, node.size);
                 file.stream.Position = 0;
             }
-            return fileList;
-        }
-
-        private void DecryptHeader(Header header, int key)
-        {
-            var rand = new XORShift128();
-            rand.InitSeed(key);
-            header.flags ^= (ArchiveFlags)rand.NextDecryptInt();
-            header.size ^= rand.NextDecryptLong();
-            header.uncompressedBlocksInfoSize ^= rand.NextDecryptUInt();
-            header.compressedBlocksInfoSize ^= rand.NextDecryptUInt();
         }
 
         private void ReadHeader(EndianBinaryReader reader)
         {
-            var key = reader.ReadInt32();
-            m_Header.flags = (ArchiveFlags)reader.ReadUInt32();
             m_Header.size = reader.ReadInt64();
-            m_Header.uncompressedBlocksInfoSize = reader.ReadUInt32();
             m_Header.compressedBlocksInfoSize = reader.ReadUInt32();
-            if (m_Header.signature != "UnityFS")
-            {
-                reader.ReadByte();
-            }
-            DecryptHeader(m_Header, key);
-            reader.Position += 0x12;
+            m_Header.uncompressedBlocksInfoSize = reader.ReadUInt32();
+            m_Header.flags = (ArchiveFlags)reader.ReadUInt32();
         }
 
         private void ReadBlocksInfoAndDirectory(EndianBinaryReader reader)
         {
             byte[] blocksInfoBytes;
-            if (m_Header.version >= 7)
-            {
-                reader.AlignStream(16);
-            }
             if ((m_Header.flags & ArchiveFlags.BlocksInfoAtTheEnd) != 0) //kArchiveBlocksInfoAtTheEnd
             {
                 var position = reader.Position;
@@ -333,7 +292,6 @@ namespace AssetStudio
             }
             using (var blocksInfoReader = new EndianBinaryReader(blocksInfoUncompresseddStream))
             {
-                var uncompressedDataHash = blocksInfoReader.ReadBytes(16);
                 var blocksInfoCount = blocksInfoReader.ReadInt32();
                 m_BlocksInfo = new StorageBlock[blocksInfoCount];
                 for (int i = 0; i < blocksInfoCount; i++)

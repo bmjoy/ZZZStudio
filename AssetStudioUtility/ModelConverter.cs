@@ -880,30 +880,13 @@ namespace AssetStudio
                     var m_Clip = animationClip.m_MuscleClip.m_Clip;
                     var streamedFrames = m_Clip.m_StreamedClip.ReadData();
                     var m_ClipBindingConstant = animationClip.m_ClipBindingConstant ?? m_Clip.ConvertValueArrayToGenericBinding();
-                    var m_ACLClip = m_Clip.m_ACLClip;
-                    var aclCount = m_ACLClip.m_CurveCount;
-                    if (m_ACLClip.m_CurveCount != 0)
-                    {
-                        m_ACLClip.Process(out var values, out var times);
-                        for (int frameIndex = 0; frameIndex < times.Length; frameIndex++)
-                        {
-                            var time = times[frameIndex];
-                            var frameOffset = frameIndex * m_ACLClip.m_CurveCount;
-                            for (int curveIndex = 0; curveIndex < m_ACLClip.m_CurveCount;)
-                            {
-                                var index = curveIndex;
-                                ReadCurveData(iAnim, m_ClipBindingConstant, index, time, values, (int)frameOffset, ref curveIndex);
-                            }
-                                
-                        }
-                    }
                     for (int frameIndex = 1; frameIndex < streamedFrames.Count - 1; frameIndex++)
                     {
                         var frame = streamedFrames[frameIndex];
                         var streamedValues = frame.keyList.Select(x => x.value).ToArray();
                         for (int curveIndex = 0; curveIndex < frame.keyList.Length;)
                         {
-                            var index = aclCount + frame.keyList[curveIndex].index;
+                            var index = frame.keyList[curveIndex].index;
                             ReadCurveData(iAnim, m_ClipBindingConstant, (int)index, frame.time, streamedValues, 0, ref curveIndex);
                         }
                     }
@@ -915,9 +898,15 @@ namespace AssetStudio
                         var frameOffset = frameIndex * m_DenseClip.m_CurveCount;
                         for (int curveIndex = 0; curveIndex < m_DenseClip.m_CurveCount;)
                         {
-                            var index = aclCount + streamCount + curveIndex;
+                            var index =  streamCount + curveIndex;
                             ReadCurveData(iAnim, m_ClipBindingConstant, (int)index, time, m_DenseClip.m_SampleArray, (int)frameOffset, ref curveIndex);
                         }
+                    }
+                    var m_ACLClip = m_Clip.m_ACLClip;
+                    var aclCount = m_ACLClip.m_CurveCount;
+                    if (m_ACLClip.m_CurveCount != 0)
+                    {
+                        //TODO
                     }
                     if (m_Clip.m_ConstantClip != null)
                     {
