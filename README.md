@@ -9,6 +9,7 @@ Some features are:
 - Togglable debug console.
 - Build Asset List of assets inside game files (use "Option -> Export Options -> AM Format" to change between XML and JSON).
 - CLI version (beta).
+- Option "Option -> Export Options -> Ignore Controller Animations" to export model/aniamators without including all animations (slow).
 ```
 _____________________________________________________________________________________________________________________________
 How to use:
