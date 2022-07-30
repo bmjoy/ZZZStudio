@@ -1,4 +1,4 @@
-name: GSBuild
+name: Build
 
 on:
   push:
