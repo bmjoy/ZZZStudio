@@ -294,8 +294,8 @@ namespace AssetStudioGUI
             }
             var m_Animator = (Animator)item.Asset;
             var convert = animationList != null
-                ? new ModelConverter(m_Animator, Properties.Settings.Default.convertType, animationList.Select(x => (AnimationClip)x.Asset).ToArray(), Properties.Settings.Default.ignoreController)
-                : new ModelConverter(m_Animator, Properties.Settings.Default.convertType, ignoreController: Properties.Settings.Default.ignoreController);
+                ? new ModelConverter(m_Animator, Properties.Settings.Default.convertType, animationList.Select(x => (AnimationClip)x.Asset).ToArray())
+                : new ModelConverter(m_Animator, Properties.Settings.Default.convertType);
             ExportFbx(convert, exportFullPath);
             return true;
         }
@@ -303,8 +303,8 @@ namespace AssetStudioGUI
         public static void ExportGameObject(GameObject gameObject, string exportPath, List<AssetItem> animationList = null)
         {
             var convert = animationList != null
-                ? new ModelConverter(gameObject, Properties.Settings.Default.convertType, animationList.Select(x => (AnimationClip)x.Asset).ToArray(), Properties.Settings.Default.ignoreController)
-                : new ModelConverter(gameObject, Properties.Settings.Default.convertType, ignoreController: Properties.Settings.Default.ignoreController);
+                ? new ModelConverter(gameObject, Properties.Settings.Default.convertType, animationList.Select(x => (AnimationClip)x.Asset).ToArray())
+                : new ModelConverter(gameObject, Properties.Settings.Default.convertType);
             exportPath = exportPath + FixFileName(gameObject.m_Name) + ".fbx";
             ExportFbx(convert, exportPath);
         }
@@ -313,8 +313,8 @@ namespace AssetStudioGUI
         {
             var rootName = Path.GetFileNameWithoutExtension(exportPath);
             var convert = animationList != null
-                ? new ModelConverter(rootName, gameObject, Properties.Settings.Default.convertType, animationList.Select(x => (AnimationClip)x.Asset).ToArray(), Properties.Settings.Default.ignoreController)
-                : new ModelConverter(rootName, gameObject, Properties.Settings.Default.convertType, ignoreController: Properties.Settings.Default.ignoreController);
+                ? new ModelConverter(rootName, gameObject, Properties.Settings.Default.convertType, animationList.Select(x => (AnimationClip)x.Asset).ToArray())
+                : new ModelConverter(rootName, gameObject, Properties.Settings.Default.convertType);
             ExportFbx(convert, exportPath);
         }
 

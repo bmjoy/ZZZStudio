@@ -23,7 +23,7 @@ namespace AssetStudio
         private Dictionary<Transform, ImportedFrame> transformDictionary = new Dictionary<Transform, ImportedFrame>();
         Dictionary<uint, string> morphChannelNames = new Dictionary<uint, string>();
 
-        public ModelConverter(GameObject m_GameObject, ImageFormat imageFormat, AnimationClip[] animationList = null, bool ignoreController = true)
+        public ModelConverter(GameObject m_GameObject, ImageFormat imageFormat, AnimationClip[] animationList = null)
         {
             this.imageFormat = imageFormat;
             if (m_GameObject.m_Animator != null)
@@ -31,7 +31,7 @@ namespace AssetStudio
                 InitWithAnimator(m_GameObject.m_Animator);
                 if (animationList == null)
                 {
-                    CollectAnimationClip(m_GameObject.m_Animator, ignoreController);
+                    CollectAnimationClip(m_GameObject.m_Animator);
                 }
             }
             else
@@ -48,7 +48,7 @@ namespace AssetStudio
             ConvertAnimations();
         }
 
-        public ModelConverter(string rootName, List<GameObject> m_GameObjects, ImageFormat imageFormat, AnimationClip[] animationList = null, bool ignoreController = true)
+        public ModelConverter(string rootName, List<GameObject> m_GameObjects, ImageFormat imageFormat, AnimationClip[] animationList = null)
         {
             this.imageFormat = imageFormat;
             RootFrame = CreateFrame(rootName, Vector3.Zero, new Quaternion(0, 0, 0, 0), Vector3.One);
@@ -56,7 +56,7 @@ namespace AssetStudio
             {
                 if (m_GameObject.m_Animator != null && animationList == null)
                 {
-                    CollectAnimationClip(m_GameObject.m_Animator, ignoreController);
+                    CollectAnimationClip(m_GameObject.m_Animator);
                 }
 
                 var m_Transform = m_GameObject.m_Transform;
@@ -78,13 +78,13 @@ namespace AssetStudio
             ConvertAnimations();
         }
 
-        public ModelConverter(Animator m_Animator, ImageFormat imageFormat, AnimationClip[] animationList = null, bool ignoreController = true)
+        public ModelConverter(Animator m_Animator, ImageFormat imageFormat, AnimationClip[] animationList = null)
         {
             this.imageFormat = imageFormat;
             InitWithAnimator(m_Animator);
             if (animationList == null)
             {
-                CollectAnimationClip(m_Animator, ignoreController);
+                CollectAnimationClip(m_Animator);
             }
             else
             {
@@ -180,9 +180,9 @@ namespace AssetStudio
             }
         }
 
-        private void CollectAnimationClip(Animator m_Animator, bool ignoreController = true)
+        private void CollectAnimationClip(Animator m_Animator)
         {
-            if (m_Animator.m_Controller.TryGet(out var m_Controller) && !ignoreController)
+            if (m_Animator.m_Controller.TryGet(out var m_Controller))
             {
                 switch (m_Controller)
                 {

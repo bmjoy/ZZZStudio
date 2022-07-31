@@ -17,6 +17,7 @@ namespace AssetStudio
             {
                 ENCRMap.Clear();
                 Progress.Reset();
+                int collisions = 0;
                 for (int i = 0; i < files.Count; i++)
                 {
                     var file = files[i];
@@ -28,6 +29,11 @@ namespace AssetStudio
                             var cabReader = new FileReader(cab.stream);
                             if (cabReader.FileType == FileType.AssetsFile)
                             {
+                                if (ENCRMap.ContainsKey(cab.path))
+                                {
+                                    collisions++;
+                                    continue;
+                                }
                                 var assetsFile = new SerializedFile(cabReader, null);
                                 var dependancies = assetsFile.m_Externals.Select(x => x.fileName).ToList();
                                 ENCRMap.Add(cab.path, new ENCREntry(file, dependancies));
@@ -57,7 +63,7 @@ namespace AssetStudio
                         }
                     }
                 }
-                Logger.Info($"ENCRMap build successfully !!");
+                Logger.Info($"ENCRMap build successfully, {collisions} Collisions Found !!");
             }
             catch (Exception e)
             {

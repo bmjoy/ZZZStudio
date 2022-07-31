@@ -179,21 +179,6 @@ namespace AssetStudioGUI.Properties
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool exportIndexObject
-        {
-            get
-            {
-                return ((bool)(this["exportIndexObject"]));
-            }
-            set
-            {
-                this["exportIndexObject"] = value;
-            }
-        }
-
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool disableRndrr
         {
@@ -219,21 +204,6 @@ namespace AssetStudioGUI.Properties
             set
             {
                 this["assetsMapFormat"] = value;
-            }
-        }
-
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool ignoreController
-        {
-            get
-            {
-                return ((bool)(this["ignoreController"]));
-            }
-            set
-            {
-                this["ignoreController"] = value;
             }
         }
 
