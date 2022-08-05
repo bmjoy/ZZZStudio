@@ -69,16 +69,11 @@ namespace AssetStudio
 
         public BundleFile(FileReader reader)
         {
-            var readHeader = false;
             m_Header = new Header();
             m_Header.signature = reader.ReadStringToNull();
-            if (m_Header.signature != "ENCR")
-            {
-                readHeader = true;
-            }
-            m_Header.version = readHeader ? reader.ReadUInt32() : 7;
-            m_Header.unityVersion = readHeader ? reader.ReadStringToNull() : "5.x.x";
-            m_Header.unityRevision = readHeader ? reader.ReadStringToNull() : "2019.4.32f1";
+            m_Header.version = reader.ReadUInt32();
+            m_Header.unityVersion = reader.ReadStringToNull();
+            m_Header.unityRevision = reader.ReadStringToNull();
             switch (m_Header.signature)
             {
                 case "UnityArchive":
@@ -99,6 +94,7 @@ namespace AssetStudio
                 case "UnityFS":
                 case "ENCR":
                     ReadHeader(reader);
+                    reader.AlignStream(0x10);
                     ReadBlocksInfoAndDirectory(reader);
                     using (var blocksStream = CreateBlocksStream(reader.FullPath))
                     {
@@ -292,6 +288,7 @@ namespace AssetStudio
             }
             using (var blocksInfoReader = new EndianBinaryReader(blocksInfoUncompresseddStream))
             {
+                var uncompressedDataHash = blocksInfoReader.ReadBytes(16);
                 var blocksInfoCount = blocksInfoReader.ReadInt32();
                 m_BlocksInfo = new StorageBlock[blocksInfoCount];
                 for (int i = 0; i < blocksInfoCount; i++)

@@ -52,6 +52,17 @@
 		</ContentWithTargetPath>
 	</ItemGroup>
 
+	<ItemGroup>
+		<ContentWithTargetPath Include="Libraries\x86\acl.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>x86\acl.dll</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="Libraries\x64\acl.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>x64\acl.dll</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
+
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<PackageReference Include="OpenTK" Version="4.6.7" />
 		<Reference Include="OpenTK.WinForms">

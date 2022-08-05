@@ -32,6 +32,7 @@
             this.OKbutton = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.ignoreController = new System.Windows.Forms.CheckBox();
             this.assetsMapFormat = new System.Windows.Forms.ComboBox();
             this.label8 = new System.Windows.Forms.Label();
             this.disableRndrr = new System.Windows.Forms.CheckBox();
@@ -98,6 +99,7 @@
             // groupBox1
             // 
             this.groupBox1.AutoSize = true;
+            this.groupBox1.Controls.Add(this.ignoreController);
             this.groupBox1.Controls.Add(this.assetsMapFormat);
             this.groupBox1.Controls.Add(this.label8);
             this.groupBox1.Controls.Add(this.disableRndrr);
@@ -116,6 +118,18 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export";
             // 
+            // ignoreController
+            // 
+            this.ignoreController.AutoSize = true;
+            this.ignoreController.Checked = true;
+            this.ignoreController.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ignoreController.Location = new System.Drawing.Point(6, 241);
+            this.ignoreController.Name = "ignoreController";
+            this.ignoreController.Size = new System.Drawing.Size(157, 17);
+            this.ignoreController.TabIndex = 21;
+            this.ignoreController.Text = "Ignore Controller Animations";
+            this.ignoreController.UseVisualStyleBackColor = true;
+            // 
             // assetsMapFormat
             // 
             this.assetsMapFormat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -123,7 +137,7 @@
             this.assetsMapFormat.Items.AddRange(new object[] {
             "XML",
             "JSON"});
-            this.assetsMapFormat.Location = new System.Drawing.Point(70, 242);
+            this.assetsMapFormat.Location = new System.Drawing.Point(70, 263);
             this.assetsMapFormat.Name = "assetsMapFormat";
             this.assetsMapFormat.Size = new System.Drawing.Size(61, 21);
             this.assetsMapFormat.TabIndex = 20;
@@ -131,7 +145,7 @@
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(6, 245);
+            this.label8.Location = new System.Drawing.Point(6, 266);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(61, 13);
             this.label8.TabIndex = 19;
@@ -586,5 +600,6 @@
         private System.Windows.Forms.CheckBox disableRndrr;
         private System.Windows.Forms.ComboBox assetsMapFormat;
         private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.CheckBox ignoreController;
     }
 }

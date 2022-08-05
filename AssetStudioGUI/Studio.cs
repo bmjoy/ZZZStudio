@@ -149,7 +149,7 @@ namespace AssetStudioGUI
                     var bundleFile = new BundleFile(reader);
                     foreach (var cab in bundleFile.fileList)
                     {
-                        if (cab.fileName.Contains(".resS"))
+                        if (cab.fileName.Contains(".resS") || cab.fileName.Contains(".resource"))
                             continue;
 
                         using (var cabReader = new FileReader(cab.stream))

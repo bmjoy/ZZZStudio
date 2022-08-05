@@ -666,6 +666,13 @@ namespace AssetStudio
                 m_MeshMetrics[1] = reader.ReadSingle();
             }
 
+            var m_CloseMeshDynamicCompression = reader.ReadBoolean();
+            reader.AlignStream();
+
+            var m_CompressLevelVertexData = reader.ReadInt32();
+            var m_CompressLevelNormalAndTangent = reader.ReadInt32();
+            var m_CompressLevelTexCoordinates = reader.ReadInt32();
+
             if (version[0] > 2018 || (version[0] == 2018 && version[1] >= 3)) //2018.3 and up
             {
                 reader.AlignStream();

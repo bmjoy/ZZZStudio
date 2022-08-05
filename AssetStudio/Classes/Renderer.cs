@@ -82,8 +82,6 @@ namespace AssetStudio
 
                 var m_LightmapIndex = reader.ReadInt16();
                 var m_LightmapIndexDynamic = reader.ReadInt16();
-                if (m_LightmapIndex != -1 || m_LightmapIndexDynamic != -1)
-                    throw new Exception("Not Supported !! skipping....");   
             }
 
             if (version[0] >= 3) //3.0 and up

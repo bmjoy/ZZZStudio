@@ -8,14 +8,14 @@ namespace AssetStudio
     public static class CABManager
     {
         public static HashSet<string> Files = new HashSet<string>();
-        public static Dictionary<string, ENCREntry> ENCRMap = new Dictionary<string, ENCREntry>();
+        public static Dictionary<string, ZZZEntry> ZZZMap = new Dictionary<string, ZZZEntry>();
 
-        public static void BuildENCRMap(List<string> files)
+        public static void BuildZZZMap(List<string> files)
         {
-            Logger.Info(string.Format("Building ENCRMap"));
+            Logger.Info(string.Format("Building ZZZMap"));
             try
             {
-                ENCRMap.Clear();
+                ZZZMap.Clear();
                 Progress.Reset();
                 int collisions = 0;
                 for (int i = 0; i < files.Count; i++)
@@ -29,14 +29,14 @@ namespace AssetStudio
                             var cabReader = new FileReader(cab.stream);
                             if (cabReader.FileType == FileType.AssetsFile)
                             {
-                                if (ENCRMap.ContainsKey(cab.path))
+                                if (ZZZMap.ContainsKey(cab.path))
                                 {
                                     collisions++;
                                     continue;
                                 }
                                 var assetsFile = new SerializedFile(cabReader, null);
                                 var dependancies = assetsFile.m_Externals.Select(x => x.fileName).ToList();
-                                ENCRMap.Add(cab.path, new ENCREntry(file, dependancies));
+                                ZZZMap.Add(cab.path, new ZZZEntry(file, dependancies));
                             }
                         }
                     }
@@ -45,14 +45,14 @@ namespace AssetStudio
                     Progress.Report(i + 1, files.Count);
                 }
 
-                ENCRMap = ENCRMap.OrderBy(pair => pair.Key).ToDictionary(pair => pair.Key, pair => pair.Value);
-                var outputFile = new FileInfo(@"ENCRMap.bin");
+                ZZZMap = ZZZMap.OrderBy(pair => pair.Key).ToDictionary(pair => pair.Key, pair => pair.Value);
+                var outputFile = new FileInfo(@"ZZZMap.bin");
 
                 using (var binaryFile = outputFile.Create())
                 using (var writer = new BinaryWriter(binaryFile))
                 {
-                    writer.Write(ENCRMap.Count);
-                    foreach (var cab in ENCRMap)
+                    writer.Write(ZZZMap.Count);
+                    foreach (var cab in ZZZMap)
                     {
                         writer.Write(cab.Key);
                         writer.Write(cab.Value.Path);
@@ -63,25 +63,25 @@ namespace AssetStudio
                         }
                     }
                 }
-                Logger.Info($"ENCRMap build successfully, {collisions} Collisions Found !!");
+                Logger.Info($"ZZZMap build successfully, {collisions} Collisions Found !!");
             }
             catch (Exception e)
             {
-                Logger.Warning($"ENCRMap was not build, {e.Message}");
+                Logger.Warning($"ZZZMap was not build, {e.Message}");
             }
         }
 
-        public static void LoadENCRMap()
+        public static void LoadZZZMap()
         {
-            Logger.Info(string.Format("Loading ENCRMap"));
+            Logger.Info(string.Format("Loading ZZZMap"));
             try
             {
-                ENCRMap.Clear();
-                using (var binaryFile = File.OpenRead("ENCRMap.bin"))
+                ZZZMap.Clear();
+                using (var binaryFile = File.OpenRead("ZZZMap.bin"))
                 using (var reader = new BinaryReader(binaryFile))
                 {
                     var count = reader.ReadInt32();
-                    ENCRMap = new Dictionary<string, ENCREntry>(count);
+                    ZZZMap = new Dictionary<string, ZZZEntry>(count);
                     for (int i = 0; i < count; i++)
                     {
                         var cab = reader.ReadString();
@@ -93,20 +93,20 @@ namespace AssetStudio
                             var dep = reader.ReadString();
                             dependencies.Add(dep);
                         }
-                        ENCRMap.Add(cab, new ENCREntry(path, dependencies));
+                        ZZZMap.Add(cab, new ZZZEntry(path, dependencies));
                     }
                 }
-                Logger.Info(string.Format("Loaded ENCRMap !!"));
+                Logger.Info(string.Format("Loaded ZZZMap !!"));
             }
             catch (Exception e)
             {
-                Logger.Warning($"ENCRMap was not loaded, {e.Message}");
+                Logger.Warning($"ZZZMap was not loaded, {e.Message}");
             }
         }
 
         public static void AddCabOffset(string cab)
         {
-            if (ENCRMap.TryGetValue(cab, out var encrEntry))
+            if (ZZZMap.TryGetValue(cab, out var encrEntry))
             {
                 if (!Files.Contains(encrEntry.Path))
                 {
@@ -119,10 +119,10 @@ namespace AssetStudio
             }
         }
 
-        public static bool FindCABFromENCR(string path, out List<string> cabs)
+        public static bool FindCABFromZZZ(string path, out List<string> cabs)
         {
             cabs = new List<string>();
-            foreach (var pair in ENCRMap)
+            foreach (var pair in ZZZMap)
             {
                 if (pair.Value.Path.Contains(path))
                 {
@@ -132,7 +132,7 @@ namespace AssetStudio
             return cabs.Count != 0;
         }
 
-        public static void ProcessENCRFiles(ref string[] files)
+        public static void ProcessZZZFiles(ref string[] files)
         {
             var newFiles = files.ToList();
             foreach (var file in files)
@@ -141,7 +141,7 @@ namespace AssetStudio
                 {
                     Files.Add(file);
                 }
-                if (FindCABFromENCR(file, out var cabs))
+                if (FindCABFromZZZ(file, out var cabs))
                 {
                     foreach (var cab in cabs)
                     {
@@ -157,28 +157,28 @@ namespace AssetStudio
         {
             Logger.Info("Resolving Dependancies...");
             var file = files.FirstOrDefault();
-            if (Path.GetExtension(file) == ".unity3d")
+            if (Path.GetExtension(file) == ".bundle")
             {
-                ProcessENCRFiles(ref files);
+                ProcessZZZFiles(ref files);
             }
         }
     }
-    public class ENCREntry : IComparable<ENCREntry>
+    public class ZZZEntry : IComparable<ZZZEntry>
     {
         public string Path;
         public List<string> Dependencies;
-        public ENCREntry(string path, List<string> dependencies)
+        public ZZZEntry(string path, List<string> dependencies)
         {
             Path = path;
             Dependencies = dependencies;
         }
-        public int CompareTo(ENCREntry other)
+        public int CompareTo(ZZZEntry other)
         {
             if (other == null) return 1;
 
             int result;
             if (other == null)
-                throw new ArgumentException("Object is not a ENCREntry");
+                throw new ArgumentException("Object is not a ZZZEntry");
 
             result = Path.CompareTo(other.Path);
 
