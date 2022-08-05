@@ -1,7 +1,7 @@
-# SRStudio
+# ZZZStudio
 Check out the [original AssetStudio project](https://github.com/Perfare/AssetStudio) for more information.
 
-This is the release of SRStudio, Modded AssetStudio that should work with Honkai: Star Rail.
+This is the release of ZZZStudio, Modded AssetStudio that should work with Zenless Zone Zero.
 _____________________________________________________________________________________________________________________________
 
 Some features are:
@@ -15,8 +15,8 @@ ________________________________________________________________________________
 How to use:
 
 ```
-1. Build ENCR Map (Misc. -> Build ENCRMap).
-2. Load unity3d files.
+1. Build ZZZ Map (Misc. -> Build ZZZMap).
+2. Load bundle files.
 ```
 
 CLI Version:
