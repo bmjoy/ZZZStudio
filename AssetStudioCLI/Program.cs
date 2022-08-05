@@ -21,7 +21,7 @@ namespace AssetStudioCLI
                     var inputPath = args[0];
                     var outputPath = args[1];
                     ClassIDType[] formats = Array.Empty<ClassIDType>();
-                    if (args.Length > 3)
+                    if (args.Length >= 3)
                     {
                         var formatArr = args.Skip(2).ToArray();
                         formats = Array.ConvertAll(formatArr, value => (ClassIDType)Enum.Parse(typeof(ClassIDType), value, true));
