@@ -1,3 +1,10 @@
+# Future of the Project
+
+Vote here: https://forms.gle/NXLkxiDPekmUjmbHA
+
+Looking forward for your feedback.
+_____________________________________________________________________________________________________________________________
+
 # ZZZStudio
 Check out the [original AssetStudio project](https://github.com/Perfare/AssetStudio) for more information.
 
