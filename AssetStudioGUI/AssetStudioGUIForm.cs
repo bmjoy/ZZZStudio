@@ -2123,13 +2123,11 @@ namespace AssetStudioGUI
         private async void buildZZZMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new OpenFolderDialog();
-            openFolderDialog.Title = "Select Win_Data Folder";
+            openFolderDialog.Title = "Select Win_Data/StreamingAssets/Bundles Folder";
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
                 Logger.Info("scanning for bundle files");
                 var files = Directory.GetFiles(openFolderDialog.Folder, "*.bundle", SearchOption.AllDirectories).ToList();
-                var idx = files.FindIndex(x => x.Contains("versions.bundle"));
-                files.RemoveAt(idx);
                 Logger.Info(string.Format("found {0} bundle files", files.Count()));
                 await Task.Run(() => CABManager.BuildZZZMap(files));
             }
@@ -2138,13 +2136,11 @@ namespace AssetStudioGUI
         private async void buildAssetMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new OpenFolderDialog();
-            openFolderDialog.Title = "Select Win_Data Folder";
+            openFolderDialog.Title = "Select Win_Data/StreamingAssets/Bundles Folder";
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
-                Logger.Info("scanning for unity3d files");
+                Logger.Info("scanning for bundle files");
                 var files = Directory.GetFiles(openFolderDialog.Folder, "*.bundle", SearchOption.AllDirectories).ToList();
-                var idx = files.FindIndex(x => x.Contains("versions.bundle"));
-                files.RemoveAt(idx);
                 Logger.Info(string.Format("found {0} bundle files", files.Count()));
                 
                 var saveFolderDialog = new OpenFolderDialog();
