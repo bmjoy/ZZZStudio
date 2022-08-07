@@ -1,56 +1,58 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using AssetStudio;
-using System.Globalization;
+using CommandLine;
 
-namespace AssetStudioCLI 
+namespace AssetStudioCLI
 {
     public class Program
     {
-        public static AssetsManager AssetsManager = new AssetsManager();
+        public static AssetsManager AssetsManager = new AssetsManager() { ResolveDependencies = false };
         public static List<AssetItem> exportableAssets = new List<AssetItem>();
         public static void Main(string[] args)
         {
-            try
+            var parser = new Parser(config =>
             {
-                if (args.Length > 2)
-                {
-                    var inputPath = args[0];
-                    var outputPath = args[1];
-                    ClassIDType[] formats = Array.Empty<ClassIDType>();
-                    if (args.Length >= 3)
-                    {
-                        var formatArr = args.Skip(2).ToArray();
-                        formats = Array.ConvertAll(formatArr, value => (ClassIDType)Enum.Parse(typeof(ClassIDType), value, true));
-                    }
+                config.AutoHelp = true;
+                config.AutoVersion = true;
+                config.CaseInsensitiveEnumValues = true;
+                config.HelpWriter = Console.Out;
+            });
+            parser.ParseArguments<Options>(args)
+                   .WithParsed(o =>
+                   {
+                       try
+                       {
+                           if (o.Verbose)
+                               Logger.Default = new ConsoleLogger();
 
-                    Logger.Default = new ConsoleLogger();
-                    if (Directory.Exists(inputPath))
-                    {
-                        AssetsManager.LoadFolder(inputPath);
-                    }
-                    else
-                    {
-                        AssetsManager.LoadFiles(inputPath);
-                    }
-                    BuildAssetData(formats);
-                    ExportAssets(outputPath, exportableAssets);
-                }
-                else
-                {
-                    throw new ArgumentException("Wrong input !!");
-                }
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine(e.Message);
-                ShowHelp();
-            }
+                           var inputPath = o.Input;
+                           var outputPath = o.Output;
+                           var types = o.Type.ToArray();
+                           var filtes = o.Filter.ToArray();
+
+                           var files = Directory.Exists(inputPath) ? Directory.GetFiles(inputPath, "*.bundle", SearchOption.AllDirectories) : new string[] { inputPath };
+                           foreach (var file in files)
+                           {
+                               AssetsManager.LoadFiles(file);
+                               BuildAssetData(types, filtes);
+                               ExportAssets(outputPath, exportableAssets);
+                               exportableAssets.Clear();
+                               AssetsManager.Clear();
+                           }
+                       }
+                       catch (Exception e)
+                       {
+                           Console.WriteLine(e.Message);
+                           Console.WriteLine(e.StackTrace);
+                       }
+                   });
+
         }
-        public static void BuildAssetData(ClassIDType[] formats)
+        public static void BuildAssetData(ClassIDType[] formats, Regex[] filters)
         {
             string productName = null;
             var objectCount = AssetsManager.assetsFileList.Sum(x => x.Objects.Count);
@@ -64,7 +66,7 @@ namespace AssetStudioCLI
                     var assetItem = new AssetItem(asset);
                     objectAssetItemDic.Add(asset, assetItem);
                     assetItem.UniqueID = " #" + i;
-                    var exportable = formats.Length > 0 ? formats.Contains(assetItem.Asset.type) : true;
+                    assetItem.Text = "";
                     switch (asset)
                     {
                         case GameObject m_GameObject:
@@ -128,6 +130,12 @@ namespace AssetStudioCLI
                             }
                             assetItem.Text = m_AssetBundle.m_Name;
                             break;
+                        case ResourceManager m_ResourceManager:
+                            foreach (var m_Container in m_ResourceManager.m_Container)
+                            {
+                                containers.Add((m_Container.Value, m_Container.Key));
+                            }
+                            break;
                         case NamedObject m_NamedObject:
                             assetItem.Text = m_NamedObject.m_Name;
                             break;
@@ -136,7 +144,9 @@ namespace AssetStudioCLI
                     {
                         assetItem.Text = assetItem.TypeString + assetItem.UniqueID;
                     }
-                    if (exportable)
+                    var isMatchRegex = filters.Length == 0 || filters.Any(x => x.IsMatch(assetItem.Text));
+                    var isFilteredType = formats.Length == 0 || formats.Contains(assetItem.Asset.type);
+                    if (isMatchRegex && isFilteredType)
                     {
                         exportableAssets.Add(assetItem);
                     }
@@ -156,33 +166,47 @@ namespace AssetStudioCLI
             int toExportCount = toExportAssets.Count;
             int exportedCount = 0;
             int i = 0;
-            Progress.Reset();
             foreach (var asset in toExportAssets)
             {
                 string exportPath;
                 exportPath = Path.Combine(savePath, asset.TypeString);
                 exportPath += Path.DirectorySeparatorChar;
-                if (Exporter.ExportConvertFile(asset, exportPath))
+                Logger.Info($"[{exportedCount + 1}/{toExportCount}] Exporting {asset.TypeString}: {asset.Text}");
+                try
                 {
-                    exportedCount++;
+                    if (Exporter.ExportConvertFile(asset, exportPath))
+                    {
+                        exportedCount++;
+                    }
                 }
-
-                Progress.Report(++i, toExportCount);
+                catch (Exception ex)
+                {
+                    Logger.Info($"Export {asset.Type}:{asset.Text} error\r\n{ex.Message}\r\n{ex.StackTrace}");
+                }
             }
+
+            var statusText = exportedCount == 0 ? "Nothing exported." : $"Finished exporting {exportedCount} assets.";
+
+            if (toExportCount > exportedCount)
+            {
+                statusText += $" {toExportCount - exportedCount} assets skipped (not extractable or files already exist)";
+            }
+
+            Logger.Info(statusText);
         }
-        
-        public static void ShowHelp()
-        {
-            var versionString = Assembly.GetEntryAssembly()?
-                                                    .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-                                                    .InformationalVersion
-                                                    .ToString();
-        
-        Console.WriteLine(@"AssetStudioCLI v{0}
-------------------------
-Usage:
-    AssetStudioCLI input_path output_path [formats ...]
-", versionString);
-        }
+    }
+
+    public class Options
+    {
+        [Option('v', "verbose", HelpText = "Show log messages.")]
+        public bool Verbose { get; set; }
+        [Option('t', "type", HelpText = "Specify unity type(s).")]
+        public IEnumerable<ClassIDType> Type { get; set; }
+        [Option('f', "filter", HelpText = "Specify regex filter(s).")]
+        public IEnumerable<Regex> Filter { get; set; }
+        [Value(0, Required = true, MetaName = "input_path", HelpText = "Input file/folder.")]
+        public string Input { get; set; }
+        [Value(1, Required = true, MetaName = "output_path", HelpText = "Output folder.")]
+        public string Output { get; set; }
     }
 }

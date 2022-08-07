@@ -10,6 +10,7 @@ namespace AssetStudio
 {
     public class AssetsManager
     {
+        public bool ResolveDependencies = true;
         public string SpecifyUnityVersion;
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
 
@@ -23,8 +24,9 @@ namespace AssetStudio
 
         public void LoadFiles(params string[] files)
         {
+            if (ResolveDependencies)
+                CABManager.ProcessDependencies(ref files);
             var path = Path.GetDirectoryName(Path.GetFullPath(files[0]));
-            CABManager.ProcessDependancies(ref files);
             MergeSplitAssets(path);
             var toReadFile = ProcessingSplitFiles(files.ToList());
             Load(toReadFile);

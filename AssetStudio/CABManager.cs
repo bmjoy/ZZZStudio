@@ -153,7 +153,7 @@ namespace AssetStudio
             files = newFiles.ToArray();
         }
 
-        public static void ProcessDependancies(ref string[] files)
+        public static void ProcessDependencies(ref string[] files)
         {
             Logger.Info("Resolving Dependancies...");
             var file = files.FirstOrDefault();
