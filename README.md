@@ -28,7 +28,22 @@ How to use:
 
 CLI Version:
 ```
-AssetStudioCLI input_path output_path [formats...]
+AssetStudioCLI 0.16.55
+Copyright (C) 2022 AssetStudioCLI
+
+  -v, --verbose           Show log messages.
+
+  -t, --type              Specify unity type(s).
+
+  -f, --filter            Specify regex filter(s).
+
+  --help                  Display this help screen.
+
+  --version               Display version information.
+
+  input_path (pos. 0)     Required. Input file/folder.
+
+  output_path (pos. 1)    Required. Output folder.
 ```
 
 NOTE: in case of any `MeshRenderer/SkinnedMeshRenderer` errors, make sure to enable `Disable Renderer` option in `Export Options` before loading assets.
